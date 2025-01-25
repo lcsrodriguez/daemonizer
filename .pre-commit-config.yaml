@@ -1,0 +1,59 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    -   id: check-added-large-files
+        args: ['--maxkb=1024']
+    -   id: check-ast
+    -   id: check-builtin-literals
+    -   id: check-case-conflict
+    -   id: check-docstring-first
+    -   id: check-executables-have-shebangs
+    -   id: check-illegal-windows-names
+    -   id: check-json
+    -   id: check-merge-conflict
+        args: ['--assume-in-merge']
+    -   id: check-shebang-scripts-are-executable
+    -   id: check-symlinks
+    -   id: check-toml
+    -   id: check-vcs-permalinks
+    -   id: check-xml
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: destroyed-symlinks
+    -   id: detect-aws-credentials
+    -   id: detect-private-key
+    -   id: double-quote-string-fixer
+    -   id: end-of-file-fixer
+    -   id: mixed-line-ending
+        args: ['--fix=auto']
+    -   id: pretty-format-json
+        args: ['--autofix']
+    -   id: requirements-txt-fixer
+    -   id: sort-simple-yaml
+    -   id: trailing-whitespace
+        args: ['--markdown-linebreak-ext=md']
+
+-   repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+    -   id: codespell
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1  # Use the sha / tag you want to point at
+    hooks:
+    -   id: mypy
+        args: [--ignore-missing-imports]
+        additional_dependencies: []
+
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.9.3
+    hooks:
+      # Run the linter.
+      -   id: ruff
+          types_or: [ python, pyi ]
+          args: [ --fix ]
+      # Run the formatter.
+      -   id: ruff-format
+          types_or: [ python, pyi ]
