@@ -129,3 +129,15 @@ class Pidfile:
             return True
         except IOError:
             return False
+
+    def read(self) -> int:
+        """
+        Method to read the pid from the pidfile.
+        :return: The pid read from the pidfile.
+        :rtype: int
+        """
+        try:
+            with open(self.abs_path, "r") as pf:
+                return int(pf.read().strip())
+        except (IOError, Exception):
+            return 0
