@@ -10,6 +10,12 @@ class InvalidPIDError(DaemonizerBaseError):
     pass
 
 
+class InvalidPIDFileError(DaemonizerBaseError):
+    """InvalidPIDFileError"""
+
+    pass
+
+
 class MissingPIDFileError(DaemonizerBaseError):
     """MissingPIDFileError"""
 
