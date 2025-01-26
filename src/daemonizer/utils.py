@@ -1,7 +1,8 @@
 import inspect
 import os
 import platform
-from typing import Callable, Dict, Tuple
+from enum import Enum
+from typing import Any, Callable, Dict
 
 import distro
 
@@ -37,7 +38,7 @@ class OSCheck:
     Class to check the operating system of the current machine.
     """
 
-    __slots__: Tuple[str, ...] = ("",)
+    # __slots__: Tuple[str, ...] = ("",)
 
     @staticmethod
     def is_linux_machine() -> bool:
@@ -105,3 +106,6 @@ def is_empty_function(func: Callable) -> bool:
         )
         <= 1
     )
+
+
+gv: Callable[[Enum], Any] = lambda e: e.value  # noqa: E731
