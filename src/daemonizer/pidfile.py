@@ -17,7 +17,13 @@ class Pidfile:
     Simple class to handle pidfile operations.
     """
 
-    __slots__: Tuple[str, ...] = ("pid_filename", "pid_path", "abs_path")
+    __slots__: Tuple[str, ...] = (
+        "pid_filename",
+        "pid_path",
+        "abs_path",
+        "is_active",
+        "pid_value",
+    )
 
     def __init__(self, pid_filename: str = "", pid_path: str = "") -> None:
         """
@@ -30,8 +36,12 @@ class Pidfile:
 
         self.pid_filename: str = pid_filename
         self.pid_path: str = pid_path
+        self.pid_value: int = 0
 
         self.abs_path: str = self.get_abs_path()
+
+        # Boolean to check if the pidfile exists in current filesystem
+        self.is_active: bool = False
 
     @property
     def absolute_path(self) -> str:
@@ -57,7 +67,9 @@ class Pidfile:
         :return: String representation of the class.
         :rtype: str
         """
-        return f"Pidfile: {self.pid_path}/{self.pid_filename}"
+        return (
+            f"Pidfile: {self.pid_path}/{self.pid_filename} [Active?: {self.is_active}]"
+        )
 
     def __repr__(self) -> str:
         """
@@ -95,9 +107,9 @@ class Pidfile:
         :return: True if the object is valid, False otherwise.
         :rtype: bool
         """
-        return self._existing_file()
+        return self.is_existing_file()
 
-    def _existing_file(self) -> bool:
+    def is_existing_file(self) -> bool:
         """
         Method to check if the pidfile exists.
         :return: True if the pidfile exists, False otherwise.
@@ -123,8 +135,9 @@ class Pidfile:
         :rtype: bool
         """
         pid = int(pid)
+        self.pid_value = pid
 
-        if self._existing_file():
+        if self.is_existing_file():
             raise AlreadyExistingPIDFileError("PID file already exists")
 
         if pid <= 0:
@@ -132,7 +145,8 @@ class Pidfile:
 
         try:
             with open(self.abs_path, "w") as pf:
-                pf.write(str(pid))
+                pf.write(str(pid) + "\n")
+            self.is_active = True
             return True
         except IOError:
             return False
@@ -144,10 +158,25 @@ class Pidfile:
         :rtype: int
         """
 
-        if not self._existing_file():
+        if not self.is_existing_file():
             raise MissingPIDFileError("PID file does not exist")
         try:
             with open(self.abs_path, "r") as pf:
                 return int(pf.read().strip())
         except (IOError, Exception):
             return 0
+
+    def delete(self) -> bool:
+        """
+        Method to delete the pidfile.
+        :return: True if the pidfile was deleted, False otherwise.
+        :rtype: bool
+        """
+        if not self.is_existing_file():
+            raise MissingPIDFileError("PID file does not exist")
+        try:
+            os.remove(self.abs_path)
+            self.is_active = False
+            return True
+        except (IOError, Exception) as exc_:
+            raise exc_
