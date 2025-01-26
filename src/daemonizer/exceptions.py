@@ -14,3 +14,9 @@ class MissingPIDFileError(DaemonizerBaseError):
     """MissingPIDFileError"""
 
     pass
+
+
+class InvalidUNIXDistroError(DaemonizerBaseError):
+    """InvalidUNIXDistroError"""
+
+    pass
