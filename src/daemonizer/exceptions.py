@@ -22,6 +22,12 @@ class MissingPIDFileError(DaemonizerBaseError):
     pass
 
 
+class AlreadyExistingPIDFileError(DaemonizerBaseError):
+    """AlreadyExistingPIDFileError"""
+
+    pass
+
+
 class InvalidUNIXDistroError(DaemonizerBaseError):
     """InvalidUNIXDistroError"""
 

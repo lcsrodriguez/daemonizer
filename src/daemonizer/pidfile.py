@@ -1,6 +1,13 @@
-from typing import Tuple
 import os
-from .exceptions import MissingPIDFileError, InvalidPIDError
+from typing import List, Tuple
+
+from .exceptions import (
+    AlreadyExistingPIDFileError,
+    InvalidPIDError,
+    MissingPIDFileError,
+)
+
+__all__: List[str] = ["Pidfile"]
 
 
 class Pidfile:
@@ -117,8 +124,8 @@ class Pidfile:
         """
         pid = int(pid)
 
-        if not self._existing_file():
-            raise MissingPIDFileError("PID file does not exist")
+        if self._existing_file():
+            raise AlreadyExistingPIDFileError("PID file already exists")
 
         if pid <= 0:
             raise InvalidPIDError("Invalid pid value")
@@ -136,6 +143,9 @@ class Pidfile:
         :return: The pid read from the pidfile.
         :rtype: int
         """
+
+        if not self._existing_file():
+            raise MissingPIDFileError("PID file does not exist")
         try:
             with open(self.abs_path, "r") as pf:
                 return int(pf.read().strip())
