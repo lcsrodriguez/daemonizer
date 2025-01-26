@@ -1,6 +1,9 @@
 import os
-from typing import Dict, Tuple
 import platform
+from typing import Dict, Tuple
+
+import distro
+
 from .constants import UNIX_SYSTEM_NAMES
 
 
@@ -15,6 +18,15 @@ def check_os() -> Dict[str, str | os.uname_result | platform.uname_result]:
         "os_uname": os.uname(),
         "platform_details": platform.uname(),
     }
+
+
+def get_unix_distro() -> str:
+    """
+    Function to get the Unix distribution name.
+    :return: The Unix distribution name.
+    :rtype: str
+    """
+    return distro.id()
 
 
 class OSCheck:
