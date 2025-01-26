@@ -1,6 +1,7 @@
 import os
 from typing import Dict
 import platform
+from .constants import UNIX_SYSTEM_NAMES
 
 
 def check_os() -> Dict[str, str | os.uname_result | platform.uname_result]:
@@ -43,3 +44,21 @@ class OSCheck:
         :rtype: bool
         """
         return platform.system() == "Windows"
+
+    @staticmethod
+    def is_unix_machine() -> bool:
+        """
+        Method to check if the current machine is running a Unix-like operating system.
+        :return: True if the machine is running a Unix-like system, False otherwise.
+        :rtype: bool
+        """
+        return platform.system() in UNIX_SYSTEM_NAMES
+
+    @staticmethod
+    def is_posix_compatible() -> bool:
+        """
+        Method to check if the current machine is POSIX compatible.
+        :return: True if the machine is POSIX compatible, False otherwise.
+        :rtype: bool
+        """
+        return os.name == "posix"
