@@ -1,5 +1,6 @@
 from typing import Tuple
 import os
+from .exceptions import MissingPIDFileError, InvalidPIDError
 
 
 class Pidfile:
@@ -105,3 +106,26 @@ class Pidfile:
         :rtype: str
         """
         return os.path.join(self.pid_path, self.pid_filename)
+
+    def write(self, pid: int | str = 0) -> bool:
+        """
+        Method to write the pid to the pidfile.
+        :param pid: The pid to write to the pidfile.
+        :type pid: int
+        :return:
+        :rtype: bool
+        """
+        pid = int(pid)
+
+        if not self._existing_file():
+            raise MissingPIDFileError("PID file does not exist")
+
+        if pid <= 0:
+            raise InvalidPIDError("Invalid pid value")
+
+        try:
+            with open(self.abs_path, "w") as pf:
+                pf.write(str(pid))
+            return True
+        except IOError:
+            return False
