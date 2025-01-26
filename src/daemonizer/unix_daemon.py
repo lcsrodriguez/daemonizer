@@ -1,14 +1,29 @@
-from typing import Tuple
+import os
+import sys
+from enum import Enum
+from typing import List, Tuple
 
 from .bases import Daemon
 from .exceptions import InvalidPIDFileError
 from .pidfile import Pidfile
+from .utils import gv
+
+__all__: List[str] = ["UNIXDaemon", "LinuxDaemon", "MacOSDaemon"]
+
+
+class StandardStreams(Enum):
+    """Enum to store the standard streams"""
+
+    IN = sys.stdin
+    OUT = sys.stdout
+    ERR = sys.stderr
 
 
 class UNIXDaemon(Daemon):
     __slots__: Tuple[str, ...] = (
         "pidfile",
         "daemon_name",
+        "daemon_pid",
     )
 
     def __init__(
@@ -39,6 +54,7 @@ class UNIXDaemon(Daemon):
 
         self.daemon_name: str = name if name != "" else "UNIX Daemon"
         self.pidfile: Pidfile = _pidfile
+        self.daemon_pid: int = 0
 
     def stop(self):
         pass
@@ -55,8 +71,54 @@ class UNIXDaemon(Daemon):
     def run(self):
         pass
 
-    def daemonize(self):
-        pass
+    def daemonize(self) -> None:
+        """
+        Daemonize the process by applying the UNIX double fork method.
+        :return: Nothing
+        :rtype: None
+        """
+
+        # Perform first fork
+
+        try:
+            _pid = os.fork()
+            if _pid > 0:  # Exit first parent
+                sys.exit(0)
+        except OSError as exc_:
+            sys.stderr.write(f"Fork 1 has failed: {exc_.errno}({exc_.strerror})\n")
+            sys.exit(1)
+
+        # Decouple first child from parent process environment
+        os.chdir("/")
+        os.setsid()
+        os.umask(0)
+
+        # Perform second fork
+        try:
+            _pid = os.fork()
+            if _pid > 0:  # Exit second parent
+                sys.exit(0)
+        except OSError as exc_:
+            sys.stderr.write(f"Fork 1 has failed: {exc_.errno}({exc_.strerror})\n")
+            sys.exit(1)
+
+        # Flushing streams buffers to avoid any data loss
+        gv(StandardStreams.OUT).flush()
+        gv(StandardStreams.ERR).flush()
+
+        # Redirect standard file descriptors
+        stream_i = open(os.devnull, "r")
+        stream_o = open(os.devnull, "a+")
+        stream_e = open(os.devnull, "a+")
+
+        os.dup2(stream_i.fileno(), gv(StandardStreams.IN).fileno())
+        os.dup2(stream_o.fileno(), gv(StandardStreams.OUT).fileno())
+        os.dup2(stream_e.fileno(), gv(StandardStreams.ERR).fileno())
+
+        self.daemon_pid = os.getpid()
+
+        # Write the pidfile on-disk
+        self.pidfile.write(self.daemon_pid)
 
     def _signal_handler(self, signum, frame):
         pass
