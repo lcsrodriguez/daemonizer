@@ -1,6 +1,7 @@
+import inspect
 import os
 import platform
-from typing import Dict, Tuple
+from typing import Callable, Dict, Tuple
 
 import distro
 
@@ -82,3 +83,25 @@ class OSCheck:
         :rtype: bool
         """
         return check_os()["os_name"] == "posix"  # type: ignore[union-attr]
+
+
+def is_empty_function(func: Callable) -> bool:
+    """
+    Function to check if a function is empty.
+    :param func: The function to check.
+    :type func: Callable
+    :return: True if the function is empty, False otherwise.
+    :rtype: bool
+    """
+    return (
+        len(
+            [
+                line
+                for line in inspect.getsourcelines(func)[0]
+                if line.strip()
+                and not line.strip().startswith("#")
+                and not line.strip().startswith('"""')
+            ]
+        )
+        <= 1
+    )
