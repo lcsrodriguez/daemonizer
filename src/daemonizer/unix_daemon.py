@@ -35,6 +35,7 @@ class UNIXDaemon(Daemon):
         "daemon_pid",
         "is_active",
         "working_directory",
+        "umask",
     )
 
     def __init__(
@@ -42,6 +43,7 @@ class UNIXDaemon(Daemon):
         name: str = "",
         pidfile: str | Pidfile | None = None,
         working_directory: str = "/",
+        umask: int = 0o022,
         *args,
         **kwargs,
     ) -> None:
@@ -51,6 +53,10 @@ class UNIXDaemon(Daemon):
         :type name: str
         :param pidfile: Path to the pidfile or an instance of the Pidfile class
         :type pidfile: str | Pidfile | None
+        :param working_directory: Working directory for the daemon
+        :type working_directory: str
+        :param umask: Umask for the daemon
+        :type umask: int
         :param args: Positional arguments
         :type args:
         :param kwargs: Keyword arguments
@@ -73,6 +79,7 @@ class UNIXDaemon(Daemon):
         self.daemon_pid: int = 0
 
         self.working_directory: str = working_directory
+        self.umask: int = umask
 
         self.is_active: bool = False
 
@@ -168,7 +175,7 @@ class UNIXDaemon(Daemon):
         # Decouple first child from parent process environment
         os.chdir(self.working_directory)
         os.setsid()
-        os.umask(0)
+        os.umask(self.umask)
 
         # Perform second fork
         try:
