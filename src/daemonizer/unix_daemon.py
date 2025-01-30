@@ -33,7 +33,7 @@ class UNIXDaemon(Daemon):
         "pidfile",
         "daemon_name",
         "daemon_pid",
-        "is_active",
+        "is_alive",
         "working_directory",
         "umask",
     )
@@ -81,7 +81,7 @@ class UNIXDaemon(Daemon):
         self.working_directory: str = working_directory
         self.umask: int = umask
 
-        self.is_active: bool = False
+        self.is_alive: bool = False
 
     def stop(self) -> None:
         """
@@ -102,6 +102,8 @@ class UNIXDaemon(Daemon):
                 os.kill(pid_, signal.SIGTERM)
                 gv(StandardStreams.OUT).write(f"Daemon {self.daemon_name} stopped\n")
                 time.sleep(0.1)
+                self.is_alive = False
+                # TODO: Check if the process is still alive to break
         except OSError as exc_:
             exc_args = str(exc_.args)
             if exc_args.find("No such process") > 0:
@@ -204,6 +206,8 @@ class UNIXDaemon(Daemon):
 
         # Write the pidfile on-disk
         self.pidfile.write(self.daemon_pid)
+
+        self.is_alive = True
 
     def _signal_handler(self, signum, frame):
         pass
