@@ -34,10 +34,16 @@ class UNIXDaemon(Daemon):
         "daemon_name",
         "daemon_pid",
         "is_active",
+        "working_directory",
     )
 
     def __init__(
-        self, name: str = "", pidfile: str | Pidfile | None = None, *args, **kwargs
+        self,
+        name: str = "",
+        pidfile: str | Pidfile | None = None,
+        working_directory: str = "/",
+        *args,
+        **kwargs,
     ) -> None:
         """
         Constructor for **UNIXDaemon** class.
@@ -65,6 +71,8 @@ class UNIXDaemon(Daemon):
         self.daemon_name: str = name if name != "" else "UNIX Daemon"
         self.pidfile: Pidfile = _pidfile
         self.daemon_pid: int = 0
+
+        self.working_directory: str = working_directory
 
         self.is_active: bool = False
 
@@ -158,7 +166,7 @@ class UNIXDaemon(Daemon):
             sys.exit(1)
 
         # Decouple first child from parent process environment
-        os.chdir("/")
+        os.chdir(self.working_directory)
         os.setsid()
         os.umask(0)
 
