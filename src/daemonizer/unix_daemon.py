@@ -127,3 +127,22 @@ class UNIXDaemon(Daemon):
 # Class aliases
 LinuxDaemon = UNIXDaemon
 MacOSDaemon = UNIXDaemon
+
+
+def handler(daemon: UNIXDaemon):
+    if len(sys.argv) == 2:
+        if "start" == sys.argv[1]:
+            daemon.start()
+        elif "stop" == sys.argv[1]:
+            daemon.stop()
+        elif "restart" == sys.argv[1]:
+            daemon.restart()
+        elif "status" == sys.argv[1]:
+            daemon.status()
+        else:
+            print("Unknown command")
+            sys.exit(2)
+        sys.exit(0)
+    else:
+        print(f"usage: {sys.argv[0]} start|stop|restart")
+        sys.exit(2)
