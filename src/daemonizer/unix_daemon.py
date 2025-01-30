@@ -129,7 +129,17 @@ LinuxDaemon = UNIXDaemon
 MacOSDaemon = UNIXDaemon
 
 
-def handler(daemon: UNIXDaemon):
+def handler(daemon: UNIXDaemon) -> None:
+    """
+    Function to handle the daemon commands from user input.
+    :param daemon: The daemon instance
+    :type daemon: UNIXDaemon
+    :return: Nothing
+    :rtype: None
+    """
+
+    # sys.argv:  0 -> script name
+    # sys.arg:  1 -> command
     if len(sys.argv) == 2:
         if "start" == sys.argv[1]:
             daemon.start()
