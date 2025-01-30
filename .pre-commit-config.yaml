@@ -1,61 +1,107 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+# See https://github.com/pre-commit/pre-commit-hooks fore more hooks as well
+
+
+# List of
 repos:
+
+# Officially hosted hooks
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v5.0.0  # Use the ref you want to point at
     hooks:
     -   id: check-added-large-files
-        args: ['--maxkb=1024']
+        args: ['--maxkb=4800']  # Limited to 2.5MB per file
     -   id: check-ast
-    -   id: check-builtin-literals
-    -   id: check-case-conflict
-    -   id: check-docstring-first
-    -   id: check-executables-have-shebangs
     -   id: check-illegal-windows-names
     -   id: check-json
-    -   id: check-merge-conflict
-        args: ['--assume-in-merge']
-    -   id: check-shebang-scripts-are-executable
     -   id: check-symlinks
     -   id: check-toml
-    -   id: check-vcs-permalinks
     -   id: check-xml
     -   id: check-yaml
+        args: [--unsafe]
     -   id: debug-statements
     -   id: destroyed-symlinks
     -   id: detect-aws-credentials
+        args: [--allow-missing-credentials]
     -   id: detect-private-key
-#    -   id: double-quote-string-fixer
     -   id: end-of-file-fixer
-    -   id: mixed-line-ending
-        args: ['--fix=auto']
+#    -   id: mixed-line-ending
+#        args: [--fix=no]
+#    -   id: no-commit-to-branch
+#        args: [--branch, staging, --branch, main, --branch, master, --branch, main_snap]
     -   id: pretty-format-json
-        args: ['--autofix']
     -   id: requirements-txt-fixer
-    -   id: sort-simple-yaml
     -   id: trailing-whitespace
-        args: ['--markdown-linebreak-ext=md']
+        args: [--markdown-linebreak-ext=md]
 
+# Hook to detect and fix common misspellings in text files
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
+    rev: v2.3.0
     hooks:
     -   id: codespell
+        args: [ -w, -L, "THIRDPARTY" ]
 
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.14.1  # Use the sha / tag you want to point at
-    hooks:
-    -   id: mypy
-        args: [--ignore-missing-imports]
-        additional_dependencies: []
-
+# Linter + Code formatter written in Rust (ultra-high performance)
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.9.3
+    rev: v0.7.1
     hooks:
-      # Run the linter.
-      -   id: ruff
-          types_or: [ python, pyi ]
-          args: [ --fix ]
-      -   id: ruff
-          args: [ "check", "--select", "I", "--fix" ]
-      # Run the formatter.
-      -   id: ruff-format
-          types_or: [ python, pyi ]
+    # Run the linter.
+    -   id: ruff
+        name: ruff (linter)
+        types_or: [ python, pyi ]
+#        args: [ --fix , -v]
+    -   id: ruff
+        name: ruff (imports sorting)
+        types_or: [ python, pyi ]
+        args: [ check , --select, I, --fix ]
+    # Run the formatter.
+    -   id: ruff-format
+        name: ruff (formatter)
+#        args: [ -v ]
+        types_or: [ python, pyi ]
+
+# Running the isort hook (sort imports alphabetically, and automatically separated into sections and by type)
+#-   repo: https://github.com/pycqa/isort
+#    rev: 5.13.2
+#    hooks:
+#    -   id: isort
+#        name: isort (python)
+#        args: [ --lines-after-imports=-1, --lines-between-types=-1, -m=3, -v ]
+#    -   id: isort
+#        name: isort (cython)
+#        types: [cython]
+#        args: [ --lines-after-imports=-1, --lines-between-types=-1, -m=3, -v ]
+#    -   id: isort
+#        name: isort (pyi)
+#        types: [pyi]
+#        args: [ --lines-after-imports=-1, --lines-between-types=-1, -m=3, -v ]
+
+
+# Running static type checker (pyright) ==> WARNING: This is a typescript lib ==> node and npm must be installed
+#-   repo: https://github.com/RobertCraigie/pyright-python
+#    rev: v1.1.386
+#    hooks:
+#    -   id: pyright
+
+# Running typos (source code spell checker)
+#-   repo: https://github.com/crate-ci/typos
+#    rev: v1.26.8
+#    hooks:
+#    -   id: typos
+
+# Running the mypy (Optional static typing for Python)
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0  # Use the sha / tag you want to point at
+    hooks:
+    -   id: mypy
+        args: [--ignore-missing-imports, --follow-imports=skip, --disable-error-code=annotation-unchecked]
+        additional_dependencies: ['types-requests', 'types-python-dateutil', 'types-Deprecated']
+
+#    # Third-party hooks
+#-   repo: https://github.com/psf/black
+#    rev: 22.10.0
+#    hooks:
+#    -   id: black
+#        args: [--safe]
