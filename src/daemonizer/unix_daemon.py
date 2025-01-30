@@ -1,5 +1,8 @@
+import atexit
 import os
+import signal
 import sys
+import time
 from enum import Enum
 from typing import List, Tuple
 
@@ -8,7 +11,7 @@ from .exceptions import InvalidPIDFileError
 from .pidfile import Pidfile
 from .utils import gv
 
-__all__: List[str] = ["UNIXDaemon", "LinuxDaemon", "MacOSDaemon"]
+__all__: List[str] = ["UNIXDaemon", "LinuxDaemon", "MacOSDaemon", "handler"]
 
 
 class StandardStreams(Enum):
@@ -20,10 +23,17 @@ class StandardStreams(Enum):
 
 
 class UNIXDaemon(Daemon):
+    """
+    Class **UNIXDaemon**
+
+    Base class for creating UNIX daemons.
+    """
+
     __slots__: Tuple[str, ...] = (
         "pidfile",
         "daemon_name",
         "daemon_pid",
+        "is_active",
     )
 
     def __init__(
@@ -56,20 +66,79 @@ class UNIXDaemon(Daemon):
         self.pidfile: Pidfile = _pidfile
         self.daemon_pid: int = 0
 
-    def stop(self):
-        pass
+        self.is_active: bool = False
 
-    def start(self):
-        pass
+    def stop(self) -> None:
+        """
+        Function to stop the daemon
+        :return: Nothing
+        :rtype: None
+        """
+        if not self.pidfile.is_existing_file():
+            gv(StandardStreams.ERR).write(
+                f"Pidfile (file={self.pidfile.absolute_path}) does not exist. Daemon not running?\n"
+            )
+            return
 
-    def restart(self):
-        pass
+        pid_: int = self.pidfile.read()
+
+        try:
+            while True:
+                os.kill(pid_, signal.SIGTERM)
+                gv(StandardStreams.OUT).write(f"Daemon {self.daemon_name} stopped\n")
+                time.sleep(0.1)
+        except OSError as exc_:
+            exc_args = str(exc_.args)
+            if exc_args.find("No such process") > 0:
+                if self.pidfile.is_existing_file():
+                    self.pidfile.delete()
+                    gv(StandardStreams.OUT).write(
+                        f"Pidfile (file={self.pidfile.absolute_path}) deleted\n"
+                    )
+            else:
+                print(exc_args)
+                sys.exit(1)
+
+    def start(self) -> None:
+        """
+        Function to start the daemon
+        :return: Nothing
+        :rtype: None
+        """
+
+        # Check if the pidfile already exists
+        if self.pidfile.is_existing_file():
+            gv(StandardStreams.ERR).write(
+                f"Pidfile (file={self.pidfile.absolute_path}) already exists.Daemon already running?\n"
+            )
+            sys.exit(1)
+
+        # Start the daemonization process
+        self.daemonize()
+        self.run()
+
+    def restart(self) -> None:
+        """
+        Function to restart the daemon
+        :return: Nothing
+        :rtype: None
+        """
+        self.stop()
+        self.start()
 
     def status(self):
-        pass
+        gv(StandardStreams.OUT).write(
+            f"Daemon {self.daemon_name} is running with pid {self.pidfile.read()}\n"
+        )
 
-    def run(self):
-        pass
+    def run(self) -> None:
+        """
+        Method to run the daemon.
+        This method must be overridden by the child class.
+        :return: Nothing
+        :rtype: None
+        """
+        ...
 
     def daemonize(self) -> None:
         """
@@ -77,7 +146,7 @@ class UNIXDaemon(Daemon):
         :return: Nothing
         :rtype: None
         """
-
+        print("daemonize")
         # Perform first fork
 
         try:
@@ -116,6 +185,7 @@ class UNIXDaemon(Daemon):
         os.dup2(stream_e.fileno(), gv(StandardStreams.ERR).fileno())
 
         self.daemon_pid = os.getpid()
+        atexit.register(self.pidfile.delete)
 
         # Write the pidfile on-disk
         self.pidfile.write(self.daemon_pid)
