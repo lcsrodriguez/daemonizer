@@ -202,15 +202,45 @@ class UNIXDaemon(Daemon):
         os.dup2(stream_e.fileno(), gv(StandardStreams.ERR).fileno())
 
         self.daemon_pid = os.getpid()
-        atexit.register(self.pidfile.delete)
 
         # Write the pidfile on-disk
         self.pidfile.write(self.daemon_pid)
 
+        self._graceful_signal_handler()
+
+        signal.signal(signal.SIGTERM, self._signal_handler)
+        signal.signal(signal.SIGHUP, self._signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGQUIT, self._signal_handler)
+        # signal.signal(signal.SIGKILL, self._signal_handler)  # Cannot be caught, blocked, or ignored
+        # __ = list(map(lambda sn: signal.signal(sn, handler=self._signal_handler), [signal.SIGTERM, signal.SIGINT, signal.SIGQUIT]))
+
         self.is_alive = True
 
     def _signal_handler(self, signum, frame):
-        pass
+        # """
+        # Signal handler method.
+        # :param signum: Signal number
+        # :type signum: int
+        # :param frame: Frame object
+        # :type frame: Frame
+        # :return: Nothing
+        # :rtype: None
+        # """
+
+        self.pidfile.delete()
+        self.is_alive = False
+        with open("/tmp/events.log", "a") as f:
+            f.write(f"Signal {signum} received\n")
+        sys.exit(0)  # Exiting the process
+
+    def _graceful_signal_handler(self) -> None:
+        """
+        Graceful signal handler method.
+        :return: Nothing
+        :rtype: None
+        """
+        atexit.register(self.pidfile.delete)
 
 
 # Class aliases
