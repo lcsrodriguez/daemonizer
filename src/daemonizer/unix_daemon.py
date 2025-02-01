@@ -14,6 +14,9 @@ from .utils import gv
 __all__: List[str] = ["UNIXDaemon", "LinuxDaemon", "MacOSDaemon", "handler"]
 
 
+Frame = type("Frame", (), {})
+
+
 class StandardStreams(Enum):
     """Enum to store the standard streams"""
 
@@ -43,7 +46,7 @@ class UNIXDaemon(Daemon):
         name: str = "",
         pidfile: str | Pidfile | None = None,
         working_directory: str = "/",
-        umask: int = 0o022,
+        umask: int = 0,  # 0o022
         *args,
         **kwargs,
     ) -> None:
