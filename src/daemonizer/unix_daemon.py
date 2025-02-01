@@ -9,7 +9,7 @@ from typing import List, Tuple
 from .bases import Daemon
 from .exceptions import InvalidPIDFileError
 from .pidfile import Pidfile
-from .utils import gv
+from .utils import gv, is_empty_function
 
 __all__: List[str] = ["UNIXDaemon", "LinuxDaemon", "MacOSDaemon", "handler"]
 
@@ -133,6 +133,12 @@ class UNIXDaemon(Daemon):
             )
             sys.exit(1)
 
+        if not self._check_valid_core_logic():
+            gv(StandardStreams.ERR).write(
+                "The core logic of the daemon is invalid. Please override the run method\n"
+            )
+            sys.exit(1)
+
         # Start the daemonization process
         self.daemonize()
         self.run()
@@ -244,6 +250,14 @@ class UNIXDaemon(Daemon):
         :rtype: None
         """
         atexit.register(self.pidfile.delete)
+
+    def _check_valid_core_logic(self) -> bool:
+        """
+        Method to check if the core logic of the daemon is valid.
+        :return:
+        :rtype:
+        """
+        return not is_empty_function(func=self.run)
 
 
 # Class aliases
