@@ -1,5 +1,7 @@
 # daemonizer
 
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
 Light-weight and easy-to-use Python package that simplifies the process of daemonizing Python applications,
 allowing them to run in the background as standalone logics.
 
