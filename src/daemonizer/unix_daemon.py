@@ -1,4 +1,5 @@
 import atexit
+import logging
 import os
 import signal
 import sys
@@ -39,6 +40,7 @@ class UNIXDaemon(Daemon):
         "is_alive",
         "working_directory",
         "umask",
+        "logger",
     )
 
     def __init__(
@@ -47,6 +49,7 @@ class UNIXDaemon(Daemon):
         pidfile: str | Pidfile | None = None,
         working_directory: str = "/",
         umask: int = 0,  # 0o022
+        logger: logging.Logger | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -83,6 +86,11 @@ class UNIXDaemon(Daemon):
 
         self.working_directory: str = working_directory
         self.umask: int = umask
+
+        # Handling input logger
+        self.logger: logging.Logger = (
+            logger if logger is not None else logging.getLogger(__name__)
+        )
 
         self.is_alive: bool = False
 
