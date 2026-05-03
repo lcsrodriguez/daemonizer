@@ -12,3 +12,7 @@ dependencies = [
 dev = [
     "pre-commit>=4.6.0",
 ]
+
+[tool.uv]
+package = true
+exclude-newer = "5 days"  # https://docs.astral.sh/uv/reference/settings/#exclude-newer
