@@ -1,26 +1,14 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-
 [project]
 name = "daemonizer"
 version = "0.1.0"
-description = "daemonizer - lightweight daemonizer for Python"
-requires-python = ">=3.8"
-license = "MIT"
-authors = [{ name="Lucas RODRIGUEZ", email="" }]
-maintainers = [{ name="Lucas RODRIGUEZ", email="" }]
-keywords = ["daemon", "daemonizer", "daemonize", "daemonizing", "daemonization", "daemonisation", "daemonising"]
+description = "Lib to daemonize programs"
 readme = "README.md"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+requires-python = ">=3.13"
+dependencies = [
+    "distro>=1.9.0",
 ]
 
-dependencies = []
-
-[project.urls]
-"Homepage" = "https://github.com/lcsrodriguez/daemonizer"
-"Bug Tracker" = "https://github.com/lcsrodriguez/daemonizer/issues"
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+]
