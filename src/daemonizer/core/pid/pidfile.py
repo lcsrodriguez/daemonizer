@@ -1,13 +1,13 @@
-import os
-from typing import List, Tuple
+"""Logic around PID file"""
 
-from .exceptions import (
+import os
+from typing import Tuple
+
+from daemonizer.exceptions import (
     AlreadyExistingPIDFileError,
     InvalidPIDError,
     MissingPIDFileError,
 )
-
-__all__: List[str] = ["Pidfile"]
 
 
 class Pidfile:

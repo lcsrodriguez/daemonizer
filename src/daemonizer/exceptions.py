@@ -1,3 +1,6 @@
+"""Custom exceptions"""
+
+
 class DaemonizerBaseError(Exception):
     """DaemonizerBaseError"""
 

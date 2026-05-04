@@ -1,5 +1,6 @@
-from typing import List
+"""Constants"""
 
+from typing import List
 
 UNIX_SYSTEM_NAMES: List[str] = [
     "Linux",

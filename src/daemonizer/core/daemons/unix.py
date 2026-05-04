@@ -1,3 +1,5 @@
+"""UNIX daemon"""
+
 import atexit
 import logging
 import os
@@ -5,15 +7,12 @@ import signal
 import sys
 import time
 from enum import Enum
-from typing import List, Tuple
+from typing import Tuple
 
-from .bases import Daemon
-from .exceptions import InvalidPIDFileError
-from .pidfile import Pidfile
-from .utils import gv, is_empty_function
-
-__all__: List[str] = ["UNIXDaemon", "LinuxDaemon", "MacOSDaemon", "handler"]
-
+from daemonizer.core.daemons.base import Daemon
+from daemonizer.core.pid.pidfile import Pidfile
+from daemonizer.exceptions import InvalidPIDFileError
+from daemonizer.utils.func import gv, is_empty_function
 
 Frame = type("Frame", (), {})
 
@@ -161,6 +160,11 @@ class UNIXDaemon(Daemon):
         self.start()
 
     def status(self):
+        """
+        Function to get status
+        :return: Nothing
+        :rtype: None
+        """
         gv(StandardStreams.OUT).write(
             f"Daemon {self.daemon_name} is running with pid {self.pidfile.read()}\n"
         )

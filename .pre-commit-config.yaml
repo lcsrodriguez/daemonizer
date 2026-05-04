@@ -2,13 +2,15 @@
 # See https://pre-commit.com/hooks.html for more hooks
 # See https://github.com/pre-commit/pre-commit-hooks fore more hooks as well
 
+exclude: ^.*\.ipynb$
 
-# List of
+
+# List of hooks to be used **before** each commit
 repos:
 
 # Officially hosted hooks
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0  # Use the ref you want to point at
+    rev: v6.0.0  # Use the ref you want to point at
     hooks:
     -   id: check-added-large-files
         args: ['--maxkb=4800']  # Limited to 2.5MB per file
@@ -37,15 +39,21 @@ repos:
 
 # Hook to detect and fix common misspellings in text files
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
     -   id: codespell
-        args: [ -w, -L, "THIRDPARTY" ]
+        args: [ -w, -L, "THIRDPARTY", "--skip=*.lock" ]
+
+# Gitleaks: tool for detecting secrets like passwords, API keys, and tokens in git repos
+-   repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
+    hooks:
+      - id: gitleaks
 
 # Linter + Code formatter written in Rust (ultra-high performance)
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.7.1
+    rev: v0.14.2
     hooks:
     # Run the linter.
     -   id: ruff
@@ -93,7 +101,7 @@ repos:
 
 # Running the mypy (Optional static typing for Python)
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.13.0  # Use the sha / tag you want to point at
+    rev: v1.18.2  # Use the sha / tag you want to point at
     hooks:
     -   id: mypy
         args: [--ignore-missing-imports, --follow-imports=skip, --disable-error-code=annotation-unchecked]
@@ -105,3 +113,31 @@ repos:
 #    hooks:
 #    -   id: black
 #        args: [--safe]
+-   repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.34.1
+    hooks:
+      - id: check-dependabot
+      - id: check-github-workflows
+
+# Zizmor: Static analysis for GitHub Actions
+-   repo: https://github.com/zizmorcore/zizmor-pre-commit
+    # Zizmor version.
+    rev: v1.16.1
+    hooks:
+      # Run the linter.
+      - id: zizmor
+
+-   repo: https://github.com/econchick/interrogate
+    rev: 1.7.0  # or master if you're bold
+    hooks:
+      - id: interrogate # Preliminary check here
+        args: [ --verbose ]
+      - id: interrogate
+        name: interrogate (coverage check on staged files only)
+        args:
+          - --fail-under=90
+          - --exclude=app|build|data|dist|out|scripts
+          - --verbose
+        pass_filenames: true
+        always_run: false
+        types: [python]

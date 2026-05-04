@@ -1,8 +1,10 @@
+"""Module to store the configuration of the PID files"""
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List
 
-from .exceptions import InvalidUNIXDistroError
+from daemonizer.exceptions import InvalidUNIXDistroError
 
 
 @dataclass
@@ -40,17 +42,36 @@ class UNIXOSConfigEnum(Enum):
 
     @classmethod
     def get_mapping(cls) -> Dict[str, Any]:
+        """
+        Function to get mapping
+        :return: Dictionary of UNIXOSConfig
+        :rtype: Dict[str, Any]
+        """
         return {os.value.distro_id: os for os in cls}
 
     @classmethod
     def get_enum(cls, distro_id: str) -> UNIXOSConfig:
+        """
+        Function to get enum
+        :param distro_id: Distribution ID
+        :type distro_id: str
+        :return: UNIXOSConfig object
+        :rtype: UNIXOSConfig
+        """
         try:
             return cls.get_mapping()[distro_id]
         except KeyError:
             raise InvalidUNIXDistroError(f"OS {distro_id} is not supported")
 
     @classmethod
-    def get_pidfile_paths(cls, distro_id) -> List[str]:
+    def get_pidfile_paths(cls, distro_id: str) -> List[str]:
+        """
+        Function to get PID file paths based on distro id
+        :param distro_id: Distribution ID
+        :type distro_id: str
+        :return: List of PID file paths
+        :rtype: List[str]
+        """
         try:
             return cls.get_mapping()[distro_id].value.pidfile_path
         except KeyError:
