@@ -3,8 +3,13 @@
 import datetime
 import time
 
-from daemonizer.core.daemons.unix import UNIXDaemon, handler
+from daemonizer.core.daemons.unix import UNIXDaemon
+from daemonizer.core.handlers.base_handler import handler
 from daemonizer.core.pid.pidfile import Pidfile
+from daemonizer.utils.logs import get_logger, setup_logger
+
+setup_logger()
+logger = get_logger(__name__)
 
 
 class SampleDaemon(UNIXDaemon):
