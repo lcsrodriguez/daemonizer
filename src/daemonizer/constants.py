@@ -20,3 +20,5 @@ UNIX_SYSTEM_NAMES: List[str] = [
     "SunOS",
     "AIX",
 ]
+
+DEFAULT_PID_FILENAME_LENGTH: int = 5

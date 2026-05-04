@@ -1,65 +1,96 @@
 """Logic around PID file"""
 
 import os
-from typing import Tuple
+import random
+import string
+from pathlib import Path
 
+from daemonizer.constants import DEFAULT_PID_FILENAME_LENGTH
 from daemonizer.exceptions import (
     AlreadyExistingPIDFileError,
     InvalidPIDError,
     MissingPIDFileError,
 )
+from daemonizer.files import PID_FILES_DIR
+from daemonizer.utils.logs import get_logger
+
+logger = get_logger(__name__)
+
+
+def ensure_existing_path(path_: Path) -> None:
+    """
+    Function to ensure if a given path exists on the disk
+    If not, create it and add it to the disk
+    :param path_: Path to be checked
+    :type path_: Path
+    :return: None
+    :rtype: Nothing
+    """
+    logger.info(f"Checking path: {path_}")
+    path_.mkdir(parents=True, exist_ok=True)
+
+
+def generate_random_pid_name(length: int = DEFAULT_PID_FILENAME_LENGTH) -> str:
+    """
+    Function to generate a default PID file name with a random name
+    :param length: PID name length
+    :type length: int
+    :return: Random PID file name
+    :rtype: str
+    """
+    gen_pattern: str = string.ascii_letters + string.digits
+    return "".join(random.choices(gen_pattern, k=length))
 
 
 class Pidfile:
     """
-    Class **Pidfile**
-
-    Simple class to handle pidfile operations.
+    PID file handler
     """
 
-    __slots__: Tuple[str, ...] = (
-        "pid_filename",
-        "pid_path",
-        "abs_path",
-        "is_active",
-        "pid_value",
-    )
-
-    def __init__(self, pid_filename: str = "", pid_path: str = "") -> None:
+    def __init__(
+        self, pid_name: str | None = None, pidfile_path: Path | str | None = None
+    ) -> None:
         """
-        Constructor for **Pidfile** class.
-        :param pid_filename:
-        :type pid_filename: str
-        :param pid_path: Path of the folder containing the pidfile
-        :type pid_path: str
+        Constructor function to
+        :param pid_name: PID name
+        :type pid_name: str | None
+        :param pidfile_path: PID file path (folder where to store the PID file)
+        :type pidfile_path: Path | str | None
         """
 
-        self.pid_filename: str = pid_filename
-        self.pid_path: str = pid_path
+        # Handling PID name
+        if pid_name is None:
+            # logger.warning("PID file name not specified. Generating a random one")
+            self.pid_name: str = generate_random_pid_name()
+        else:
+            self.pid_name = pid_name
+
+        # Handling PID file path (where to store PID file)
+        if pidfile_path is None:
+            # logger.info("PID file path not specified. Using default one")
+            self.pidfile_path: Path = PID_FILES_DIR
+            ensure_existing_path(path_=self.pidfile_path)
+
+        else:
+            # logging.info("Custom PID file path")
+            if isinstance(pidfile_path, Path):
+                self.pidfile_path = pidfile_path
+                ensure_existing_path(path_=self.pidfile_path)
+            elif isinstance(pidfile_path, str):
+                self.pidfile_path = Path(pidfile_path)
+                ensure_existing_path(path_=self.pidfile_path)
+
+        # PID value
         self.pid_value: int = 0
 
+        # PID filename
+        self.pid_filename = f"{self.pid_name}.pid"
+
+        # Get absolute math
         self.abs_path: str = self.get_abs_path()
 
         # Boolean to check if the pidfile exists in current filesystem
         self.is_active: bool = False
-
-    @property
-    def absolute_path(self) -> str:
-        """
-        Property to return the absolute path of the pidfile.
-        :return: The absolute path of the pidfile.
-        :rtype: str
-        """
-        return self.abs_path
-
-    @absolute_path.setter
-    def absolute_path(self, value: str) -> None:
-        """
-        Setter for the absolute path of the pidfile.
-        :param value: The new absolute path of the pidfile.
-        :type value: str
-        """
-        self.abs_path = value
 
     def __str__(self) -> str:
         """
@@ -67,9 +98,7 @@ class Pidfile:
         :return: String representation of the class.
         :rtype: str
         """
-        return (
-            f"Pidfile: {self.pid_path}/{self.pid_filename} [Active?: {self.is_active}]"
-        )
+        return f"Pidfile: {self.abs_path} [Active?: {self.is_active}]"
 
     def __repr__(self) -> str:
         """
@@ -78,36 +107,6 @@ class Pidfile:
         :rtype: str
         """
         return self.__str__()
-
-    def __eq__(self, other) -> bool:
-        """
-        Method to compare two objects.
-        :param other: The other object to compare.
-        :type other: object
-        :return: True if the objects are equal, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, Pidfile):
-            return False
-        return (
-            self.pid_filename == other.pid_filename and self.pid_path == other.pid_path
-        )
-
-    def __hash__(self) -> int:
-        """
-        Method to return the hash of the object.
-        :return: The hash of the object.
-        :rtype: int
-        """
-        return hash((self.pid_filename, self.pid_path))
-
-    def __bool__(self) -> bool:
-        """
-        Method to check if the current file exists
-        :return: True if the object is valid, False otherwise.
-        :rtype: bool
-        """
-        return self.is_existing_file()
 
     def is_existing_file(self) -> bool:
         """
@@ -124,7 +123,7 @@ class Pidfile:
         :return: The absolute path of the pidfile.
         :rtype: str
         """
-        return os.path.join(self.pid_path, self.pid_filename)
+        return os.path.join(self.pidfile_path, self.pid_filename)
 
     def write(self, pid: int | str = 0) -> bool:
         """
