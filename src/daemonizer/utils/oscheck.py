@@ -1,12 +1,12 @@
-import inspect
+"""Utils func to check current OS"""
+
 import os
 import platform
-from enum import Enum
-from typing import Any, Callable, Dict
+from typing import Dict
 
 import distro
 
-from .constants import UNIX_SYSTEM_NAMES
+from daemonizer.constants import UNIX_SYSTEM_NAMES
 
 
 def check_os() -> Dict[str, str | os.uname_result | platform.uname_result]:
@@ -84,28 +84,3 @@ class OSCheck:
         :rtype: bool
         """
         return check_os()["os_name"] == "posix"  # type: ignore[union-attr]
-
-
-def is_empty_function(func: Callable) -> bool:
-    """
-    Function to check if a function is empty.
-    :param func: The function to check.
-    :type func: Callable
-    :return: True if the function is empty, False otherwise.
-    :rtype: bool
-    """
-    return (
-        len(
-            [
-                line
-                for line in inspect.getsourcelines(func)[0]
-                if line.strip()
-                and not line.strip().startswith("#")
-                and not line.strip().startswith('"""')
-            ]
-        )
-        <= 1
-    )
-
-
-gv: Callable[[Enum], Any] = lambda e: e.value  # noqa: E731
