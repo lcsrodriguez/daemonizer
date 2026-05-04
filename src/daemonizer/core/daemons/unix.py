@@ -113,6 +113,11 @@ class UNIXDaemon(Daemon):
         """
         return self.daemon_args
 
+    def _deleting_pidfile(self) -> None:
+        if self.pidfile.is_existing_file():
+            self.pidfile.delete()
+            log_out(f"Pidfile (file={self.pidfile.abs_path}) deleted\n")
+
     def stop(self) -> None:
         """
         Function to stop the daemon
@@ -131,6 +136,7 @@ class UNIXDaemon(Daemon):
             log_err(
                 "This daemon is currently not running on this machine. No stop needed"
             )
+            self._deleting_pidfile()
             sys.exit(1)
 
         try:
@@ -143,9 +149,7 @@ class UNIXDaemon(Daemon):
         except OSError as exc_:
             exc_args = str(exc_.args)
             if exc_args.find("No such process") > 0:
-                if self.pidfile.is_existing_file():
-                    self.pidfile.delete()
-                    log_out(f"Pidfile (file={self.pidfile.abs_path}) deleted\n")
+                self._deleting_pidfile()
             else:
                 print(exc_args)
                 sys.exit(1)
@@ -276,7 +280,9 @@ class UNIXDaemon(Daemon):
         # :rtype: None
         # """
 
-        self.pidfile.delete()
+        # self.pidfile.delete()
+        self._deleting_pidfile()
+
         self.is_alive = False
         with open("/tmp/events.log", "a") as f:
             f.write(f"Signal {signum} received\n")
@@ -289,6 +295,7 @@ class UNIXDaemon(Daemon):
         :rtype: None
         """
         atexit.register(self.pidfile.delete)
+        atexit.register(self._deleting_pidfile)
 
     def _check_valid_core_logic(self) -> bool:
         """

@@ -26,7 +26,7 @@ def ensure_existing_path(path_: Path) -> None:
     :return: None
     :rtype: Nothing
     """
-    logger.info(f"Checking path: {path_}")
+    # logger.info(f"Checking path: {path_}")
     path_.mkdir(parents=True, exist_ok=True)
 
 
