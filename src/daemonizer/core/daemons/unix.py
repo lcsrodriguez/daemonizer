@@ -12,6 +12,7 @@ from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.pid.pidfile import Pidfile
 from daemonizer.utils.func import is_empty_function
 from daemonizer.utils.logs import get_logger
+from daemonizer.utils.process import is_active_process
 from daemonizer.utils.streams import log_err, log_out, stream_err, stream_in, stream_out
 
 logger = get_logger(__name__)
@@ -125,6 +126,12 @@ class UNIXDaemon(Daemon):
             return
 
         pid_: int = self.pidfile.read()
+
+        if not is_active_process(pid_=pid_):
+            log_err(
+                "This daemon is currently not running on this machine. No stop needed"
+            )
+            sys.exit(1)
 
         try:
             while True:
