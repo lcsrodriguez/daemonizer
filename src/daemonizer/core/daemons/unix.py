@@ -103,6 +103,15 @@ class UNIXDaemon(Daemon):
         # Flag to track whether current daemon is alive
         self.is_alive: bool = False
 
+    def get_arguments(self) -> Dict[str, Tuple[Any, ...] | Dict[str, Any]]:
+        """
+        Function to get arguments
+        This method can be called in the custom daemon logic
+        :return: Dict of both positional and keyword arguments
+        :rtype: Dict[str, Tuple[Any, ...] | Dict[str, Any]]
+        """
+        return self.daemon_args
+
     def stop(self) -> None:
         """
         Function to stop the daemon

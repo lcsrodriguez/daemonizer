@@ -25,6 +25,7 @@ class SampleDaemon(UNIXDaemon):
         while True:
             with open("/tmp/TOTO.log", "a") as f:
                 f.write(f"Hello, Lucas {datetime.datetime.now()}\n")
+                f.write(f"{self.get_arguments()['kwargs'].get('ssa')}\n")  # type: ignore[union-attr]
             time.sleep(1)
             self.logger.info("Sample Daemon")
 
@@ -33,4 +34,4 @@ if __name__ == "__main__":
     # with DaemonHandler() as h:
     #    h.add(daemon)
     #    h.run()
-    handler(SampleDaemon(name="TOTO"))
+    handler(SampleDaemon(name="TOTO", ssa="e"))
