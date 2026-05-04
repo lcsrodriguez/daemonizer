@@ -7,14 +7,16 @@ import signal
 import sys
 import time
 from enum import Enum
-from typing import Tuple
 
 from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.pid.pidfile import Pidfile
 from daemonizer.exceptions import InvalidPIDFileError
 from daemonizer.utils.func import gv, is_empty_function
+from daemonizer.utils.logs import get_logger
 
-Frame = type("Frame", (), {})
+logger = get_logger(__name__)
+
+# Frame = type("Frame", (), {})
 
 
 class StandardStreams(Enum):
@@ -32,6 +34,7 @@ class UNIXDaemon(Daemon):
     Base class for creating UNIX daemons.
     """
 
+    """
     __slots__: Tuple[str, ...] = (
         "pidfile",
         "daemon_name",
@@ -41,6 +44,7 @@ class UNIXDaemon(Daemon):
         "umask",
         "logger",
     )
+    """
 
     def __init__(
         self,
@@ -153,6 +157,7 @@ class UNIXDaemon(Daemon):
     def restart(self) -> None:
         """
         Function to restart the daemon
+        Once restarted, daemon has a new PID (new process)
         :return: Nothing
         :rtype: None
         """
@@ -275,32 +280,3 @@ class UNIXDaemon(Daemon):
 # Class aliases
 LinuxDaemon = UNIXDaemon
 MacOSDaemon = UNIXDaemon
-
-
-def handler(daemon: UNIXDaemon) -> None:
-    """
-    Function to handle the daemon commands from user input.
-    :param daemon: The daemon instance
-    :type daemon: UNIXDaemon
-    :return: Nothing
-    :rtype: None
-    """
-
-    # sys.argv:  0 -> script name
-    # sys.arg:  1 -> command
-    if len(sys.argv) == 2:
-        if "start" == sys.argv[1]:
-            daemon.start()
-        elif "stop" == sys.argv[1]:
-            daemon.stop()
-        elif "restart" == sys.argv[1]:
-            daemon.restart()
-        elif "status" == sys.argv[1]:
-            daemon.status()
-        else:
-            print("Unknown command")
-            sys.exit(2)
-        sys.exit(0)
-    else:
-        print(f"usage: {sys.argv[0]} start|stop|restart")
-        sys.exit(2)
