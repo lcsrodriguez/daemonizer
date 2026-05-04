@@ -6,27 +6,17 @@ import os
 import signal
 import sys
 import time
-from enum import Enum
 from typing import Any, Dict, Tuple
 
 from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.pid.pidfile import Pidfile
-
-# from daemonizer.exceptions import InvalidPIDFileError
-from daemonizer.utils.func import gv, is_empty_function
+from daemonizer.utils.func import is_empty_function
 from daemonizer.utils.logs import get_logger
+from daemonizer.utils.streams import log_err, log_out, stream_err, stream_in, stream_out
 
 logger = get_logger(__name__)
 
 # Frame = type("Frame", (), {})
-
-
-class StandardStreams(Enum):
-    """Enum to store the standard streams"""
-
-    IN = sys.stdin
-    OUT = sys.stdout
-    ERR = sys.stderr
 
 
 class UNIXDaemon(Daemon):
@@ -55,8 +45,8 @@ class UNIXDaemon(Daemon):
         working_directory: str = "/",
         umask: int = 0,  # 0o022
         dlogger: logging.Logger | None = None,
-        *args: Tuple[Any, ...],
-        **kwargs: Dict[str, Any],
+        *args,
+        **kwargs,
     ) -> None:
         """
         Daemon constructor function
@@ -120,7 +110,7 @@ class UNIXDaemon(Daemon):
         :rtype: None
         """
         if not self.pidfile.is_existing_file():
-            gv(StandardStreams.ERR).write(
+            log_err(
                 f"Pidfile (file={self.pidfile.abs_path}) does not exist. Daemon not running?\n"
             )
             return
@@ -130,7 +120,7 @@ class UNIXDaemon(Daemon):
         try:
             while True:
                 os.kill(pid_, signal.SIGTERM)
-                gv(StandardStreams.OUT).write(f"Daemon {self.daemon_name} stopped\n")
+                log_out(f"Daemon {self.daemon_name} stopped\n")
                 time.sleep(0.1)
                 self.is_alive = False
                 # TODO: Check if the process is still alive to break
@@ -139,9 +129,7 @@ class UNIXDaemon(Daemon):
             if exc_args.find("No such process") > 0:
                 if self.pidfile.is_existing_file():
                     self.pidfile.delete()
-                    gv(StandardStreams.OUT).write(
-                        f"Pidfile (file={self.pidfile.abs_path}) deleted\n"
-                    )
+                    log_out(f"Pidfile (file={self.pidfile.abs_path}) deleted\n")
             else:
                 print(exc_args)
                 sys.exit(1)
@@ -155,13 +143,13 @@ class UNIXDaemon(Daemon):
 
         # Check if the pidfile already exists
         if self.pidfile.is_existing_file():
-            gv(StandardStreams.ERR).write(
+            log_err(
                 f"Pidfile (file={self.pidfile.abs_path}) already exists.Daemon already running?\n"
             )
             sys.exit(1)
 
         if not self._check_valid_core_logic():
-            gv(StandardStreams.ERR).write(
+            log_err(
                 "The core logic of the daemon is invalid. Please override the run method\n"
             )
             sys.exit(1)
@@ -188,7 +176,7 @@ class UNIXDaemon(Daemon):
         :return: Nothing
         :rtype: None
         """
-        gv(StandardStreams.OUT).write(
+        log_out(
             f"Daemon {self.daemon_name} is running with pid {self.pidfile.read()}\n"
         )
 
@@ -215,7 +203,7 @@ class UNIXDaemon(Daemon):
             if _pid > 0:  # Exit first parent
                 sys.exit(0)
         except OSError as exc_:
-            sys.stderr.write(f"Fork 1 has failed: {exc_.errno}({exc_.strerror})\n")
+            stream_err().write(f"Fork 1 has failed: {exc_.errno}({exc_.strerror})\n")
             sys.exit(1)
 
         # Decouple first child from parent process environment
@@ -229,21 +217,21 @@ class UNIXDaemon(Daemon):
             if _pid > 0:  # Exit second parent
                 sys.exit(0)
         except OSError as exc_:
-            sys.stderr.write(f"Fork 1 has failed: {exc_.errno}({exc_.strerror})\n")
+            stream_err().write(f"Fork 1 has failed: {exc_.errno}({exc_.strerror})\n")
             sys.exit(1)
 
         # Flushing streams buffers to avoid any data loss
-        gv(StandardStreams.OUT).flush()
-        gv(StandardStreams.ERR).flush()
+        stream_out().flush()
+        stream_err().flush()
 
         # Redirect standard file descriptors
         stream_i = open(os.devnull, "r")
         stream_o = open(os.devnull, "a+")
         stream_e = open(os.devnull, "a+")
 
-        os.dup2(stream_i.fileno(), gv(StandardStreams.IN).fileno())
-        os.dup2(stream_o.fileno(), gv(StandardStreams.OUT).fileno())
-        os.dup2(stream_e.fileno(), gv(StandardStreams.ERR).fileno())
+        os.dup2(stream_i.fileno(), stream_in().fileno())
+        os.dup2(stream_o.fileno(), stream_out().fileno())
+        os.dup2(stream_e.fileno(), stream_err().fileno())
 
         self.daemon_pid = os.getpid()
 
