@@ -11,4 +11,5 @@ LOG_DIR: Path = user_log_path(appname=APP_NAME, version=APP_VERSION)
 DATA_DIR: Path = user_data_path(appname=APP_NAME, version=APP_VERSION)
 
 
-PID_FILES_DIR: Path = Path("/tmp/daemonizer/pidfiles")
+DAEMONIZER_BASE_DIR: Path = Path(f"/tmp/{APP_NAME}")
+PID_FILES_DIR: Path = DAEMONIZER_BASE_DIR / "pidfiles"

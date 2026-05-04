@@ -7,10 +7,12 @@ import signal
 import sys
 import time
 from enum import Enum
+from typing import Any, Dict, Tuple
 
 from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.pid.pidfile import Pidfile
-from daemonizer.exceptions import InvalidPIDFileError
+
+# from daemonizer.exceptions import InvalidPIDFileError
 from daemonizer.utils.func import gv, is_empty_function
 from daemonizer.utils.logs import get_logger
 
@@ -29,9 +31,9 @@ class StandardStreams(Enum):
 
 class UNIXDaemon(Daemon):
     """
-    Class **UNIXDaemon**
-
-    Base class for creating UNIX daemons.
+    UNIX daemon
+    Base class to define a valid daemon logic to be run on UNIX distributions
+    To define a UNIX daemon, you must override `UNIXDaemon.run(...)` abstract method
     """
 
     """
@@ -49,52 +51,66 @@ class UNIXDaemon(Daemon):
     def __init__(
         self,
         name: str = "",
-        pidfile: str | Pidfile | None = None,
+        pidfile: Pidfile | None = None,
         working_directory: str = "/",
         umask: int = 0,  # 0o022
-        logger: logging.Logger | None = None,
-        *args,
-        **kwargs,
+        dlogger: logging.Logger | None = None,
+        *args: Tuple[Any, ...],
+        **kwargs: Dict[str, Any],
     ) -> None:
         """
-        Constructor for **UNIXDaemon** class.
+        Daemon constructor function
         :param name: Daemon name
         :type name: str
-        :param pidfile: Path to the pidfile or an instance of the Pidfile class
-        :type pidfile: str | Pidfile | None
-        :param working_directory: Working directory for the daemon
+        :param pidfile: PID file
+        :type pidfile: Pidfile
+        :param working_directory: Working directory for daemon
         :type working_directory: str
-        :param umask: Umask for the daemon
+        :param umask: umask
         :type umask: int
+        :param dlogger: Daemon logger
+        :type dlogger: logging.Logger
         :param args: Positional arguments
-        :type args:
+        :type args: Tuple[Any, ...]
         :param kwargs: Keyword arguments
-        :type kwargs:
+        :type kwargs: Dict[str, Any]
         """
+
+        # Daemon name
+        self.daemon_name: str = name if name != "" else "unix_daemon"
+
         if pidfile is None:
-            raise InvalidPIDFileError("PID file is required")
-
-        if isinstance(pidfile, str):
-            _pidfile: Pidfile = Pidfile(
-                pid_filename=pidfile, pid_path=kwargs.get("pid_path", "")
+            pidfile = Pidfile(
+                pid_name=self.daemon_name,
             )
-        elif isinstance(pidfile, Pidfile):
-            _pidfile = pidfile
+            self.pidfile: Pidfile = pidfile
         else:
-            _pidfile = pidfile
+            if isinstance(pidfile, Pidfile):
+                self.pidfile = pidfile
 
-        self.daemon_name: str = name if name != "" else "UNIX Daemon"
-        self.pidfile: Pidfile = _pidfile
+        # Daemon PID
         self.daemon_pid: int = 0
 
+        # Daemon working directory
         self.working_directory: str = working_directory
+
+        # Daemon umask
         self.umask: int = umask
 
         # Handling input logger
         self.logger: logging.Logger = (
-            logger if logger is not None else logging.getLogger(__name__)
+            dlogger
+            if dlogger is not None and isinstance(dlogger, logging.Logger)
+            else logging.getLogger(__name__)
         )
 
+        # Arguments
+        self.daemon_args: Dict[str, Tuple[Any, ...] | Dict[str, Any]] = {
+            "args": args,
+            "kwargs": kwargs,
+        }
+
+        # Flag to track whether current daemon is alive
         self.is_alive: bool = False
 
     def stop(self) -> None:
@@ -105,7 +121,7 @@ class UNIXDaemon(Daemon):
         """
         if not self.pidfile.is_existing_file():
             gv(StandardStreams.ERR).write(
-                f"Pidfile (file={self.pidfile.absolute_path}) does not exist. Daemon not running?\n"
+                f"Pidfile (file={self.pidfile.abs_path}) does not exist. Daemon not running?\n"
             )
             return
 
@@ -124,7 +140,7 @@ class UNIXDaemon(Daemon):
                 if self.pidfile.is_existing_file():
                     self.pidfile.delete()
                     gv(StandardStreams.OUT).write(
-                        f"Pidfile (file={self.pidfile.absolute_path}) deleted\n"
+                        f"Pidfile (file={self.pidfile.abs_path}) deleted\n"
                     )
             else:
                 print(exc_args)
@@ -140,7 +156,7 @@ class UNIXDaemon(Daemon):
         # Check if the pidfile already exists
         if self.pidfile.is_existing_file():
             gv(StandardStreams.ERR).write(
-                f"Pidfile (file={self.pidfile.absolute_path}) already exists.Daemon already running?\n"
+                f"Pidfile (file={self.pidfile.abs_path}) already exists.Daemon already running?\n"
             )
             sys.exit(1)
 
@@ -162,6 +178,8 @@ class UNIXDaemon(Daemon):
         :rtype: None
         """
         self.stop()
+        # TODO: If stops fails (no running daemon), do not start !!
+
         self.start()
 
     def status(self):
