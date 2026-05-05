@@ -1,4 +1,4 @@
-"""UNIX daemon"""
+"""UNIX daemon implementation"""
 
 import atexit
 import logging
@@ -10,6 +10,7 @@ from typing import Any, Dict, Tuple
 
 from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.pid.pidfile import Pidfile
+from daemonizer.files import DAEMONIZER_BASE_DIR
 from daemonizer.utils.func import is_empty_function
 from daemonizer.utils.logs import get_logger
 from daemonizer.utils.process import is_active_process
@@ -114,6 +115,11 @@ class UNIXDaemon(Daemon):
         return self.daemon_args
 
     def _deleting_pidfile(self) -> None:
+        """
+        Function to clean-delete associated PID file
+        :return: Nothing
+        :rtype: None
+        """
         if self.pidfile.is_existing_file():
             self.pidfile.delete()
             log_out(f"Pidfile (file={self.pidfile.abs_path}) deleted\n")
@@ -130,8 +136,10 @@ class UNIXDaemon(Daemon):
             )
             return
 
+        # Reading PID
         pid_: int = self.pidfile.read()
 
+        # Checking if the process is still alive
         if not is_active_process(pid_=pid_):
             log_err(
                 "This daemon is currently not running on this machine. No stop needed"
@@ -192,13 +200,32 @@ class UNIXDaemon(Daemon):
 
     def status(self):
         """
-        Function to get status
+        Function to get status of a given
         :return: Nothing
         :rtype: None
         """
-        log_out(
-            f"Daemon {self.daemon_name} is running with pid {self.pidfile.read()}\n"
-        )
+        if self._status():
+            log_out(
+                f"Daemon {self.daemon_name} is running with PID {self.pidfile.read()}"
+            )
+        else:
+            log_out(f"Daemon {self.daemon_name} is not running")
+
+    def _status(self) -> bool:
+        """
+        Function to get current daemon status (process active or not)
+        :return: True if daemon process is active, False otherwise
+        :rtype: bool
+        """
+        try:
+            pid: int = self.pidfile.read()
+
+            if is_active_process(pid_=pid):
+                return True
+        except Exception as exc_:
+            logger.warning(f"An error has occurred while trying to read PID: {exc_}")
+            return False
+        return False
 
     def run(self) -> None:
         """
@@ -216,8 +243,8 @@ class UNIXDaemon(Daemon):
         :rtype: None
         """
         print("daemonize")
-        # Perform first fork
 
+        # Perform first fork
         try:
             _pid = os.fork()
             if _pid > 0:  # Exit first parent
@@ -237,7 +264,7 @@ class UNIXDaemon(Daemon):
             if _pid > 0:  # Exit second parent
                 sys.exit(0)
         except OSError as exc_:
-            stream_err().write(f"Fork 1 has failed: {exc_.errno}({exc_.strerror})\n")
+            stream_err().write(f"Fork 2 has failed: {exc_.errno}({exc_.strerror})\n")
             sys.exit(1)
 
         # Flushing streams buffers to avoid any data loss
@@ -253,11 +280,13 @@ class UNIXDaemon(Daemon):
         os.dup2(stream_o.fileno(), stream_out().fileno())
         os.dup2(stream_e.fileno(), stream_err().fileno())
 
+        # Get damon PID
         self.daemon_pid = os.getpid()
 
         # Write the pidfile on-disk
         self.pidfile.write(self.daemon_pid)
 
+        # Adding signal handlers
         self._graceful_signal_handler()
 
         signal.signal(signal.SIGTERM, self._signal_handler)
@@ -269,22 +298,22 @@ class UNIXDaemon(Daemon):
 
         self.is_alive = True
 
-    def _signal_handler(self, signum, frame):
-        # """
-        # Signal handler method.
-        # :param signum: Signal number
-        # :type signum: int
-        # :param frame: Frame object
-        # :type frame: Frame
-        # :return: Nothing
-        # :rtype: None
-        # """
+    def _signal_handler(self, signum: int, frame):
+        """
+        Signal handler method to register callback func to be executed once we catch a signal sent to daemon
+        :param signum: Signal number
+        :type signum: int
+        :param frame: Frame object
+        :type frame: Frame
+        :return: Nothing
+        :rtype: None
+        """
 
         # self.pidfile.delete()
         self._deleting_pidfile()
 
         self.is_alive = False
-        with open("/tmp/events.log", "a") as f:
+        with open(DAEMONIZER_BASE_DIR / "events.log", "a") as f:
             f.write(f"Signal {signum} received\n")
         sys.exit(0)  # Exiting the process
 
