@@ -47,6 +47,7 @@ class UNIXDaemon(Daemon):
         working_directory: str = "/",
         umask: int = 0,  # 0o022
         dlogger: logging.Logger | None = None,
+        stop_daemon_signal: int = signal.SIGTERM,
         *args,
         **kwargs,
     ) -> None:
@@ -82,6 +83,9 @@ class UNIXDaemon(Daemon):
 
         # Daemon PID
         self.daemon_pid: int = 0
+
+        # Signal to be used to stop the daemon (:= kill the process)
+        self.stop_daemon_signal: int = stop_daemon_signal
 
         # Daemon working directory
         self.working_directory: str = working_directory
@@ -144,7 +148,14 @@ class UNIXDaemon(Daemon):
 
     def stop(self) -> None:
         """
-        Function to stop the daemon
+        Function to stop the daemon.
+            - If the PID file is on the disk (same name as current daemon), we read the PID in the file
+                - If process (identified by PID) is still active, we kill it with specified signal (`self.stop_daemon_signal`)
+                - If process is not active anymore (it may have been terminated by natural cause (core logic) or external
+                signal sent by the user), we are removing PID file (not needed anymore)
+            - If the PID file is not on the disk, we cannot stop the daemon.
+        This is why it is important to avoid manipulating PID files as their management is handled automatically by the
+        library.
         :return: Nothing
         :rtype: None
         """
@@ -152,7 +163,7 @@ class UNIXDaemon(Daemon):
             log_err(
                 f"Pidfile (file={self.pidfile.abs_path}) does not exist. Daemon not running?\n"
             )
-            return
+            return None
 
         # Reading PID
         pid_: int = self.pidfile.read()
@@ -167,7 +178,7 @@ class UNIXDaemon(Daemon):
 
         try:
             while True:
-                os.kill(pid_, signal.SIGTERM)
+                os.kill(pid_, self.stop_daemon_signal)  # signal.SIGTERM
                 log_out(f"Daemon {self.daemon_name} stopped\n")
                 time.sleep(0.1)
                 self.is_alive = False
@@ -206,7 +217,7 @@ class UNIXDaemon(Daemon):
 
     def restart(self) -> None:
         """
-        Function to restart the daemon
+        Function to restart the daemon (it stops then starts the process)
         Once restarted, daemon has a new PID (new process)
         :return: Nothing
         :rtype: None
@@ -218,7 +229,7 @@ class UNIXDaemon(Daemon):
 
     def status(self):
         """
-        Function to get status of a given
+        Function to get status of the current daemon
         :return: Nothing
         :rtype: None
         """
@@ -253,10 +264,13 @@ class UNIXDaemon(Daemon):
         :rtype: None
         """
         ...
+        # raise NotImplementedError()
 
     def _daemonize(self) -> None:
         """
         Daemonize the process by applying the UNIX double fork method.
+        This private method ensures the daemon logic (defined and executed in the `.run(...)` method)
+        will be executed in a totally-independent process (detached from other running processes) and be run in
         :return: Nothing
         :rtype: None
         """
