@@ -3,6 +3,7 @@
 from typing import List
 
 from daemonizer.core.daemons.base import Daemon
+from daemonizer.core.daemons.flags import FLAGS, RESTART, START, STATUS, STOP
 from daemonizer.utils.logs import get_logger
 
 logger = get_logger(__name__)
@@ -47,7 +48,41 @@ class DaemonHandler:
             logger.info("Running handler")
 
             # TODO: Adding handler part here for each registered daemons
-            print(self.daemons)
+            self.perform(flags=[START])
+
+    def perform(self, flags: List[int] | int | None = None) -> None:
+        """
+        Function to perform operations on currently-registered daemons.
+        This function handles START, STOP, RESTART and STATUS flags (defined in `core.daemons.flags`)
+        :param flags: Flags to be performed on currently registered daemons
+        :type flags: List[int] | int | None
+        :return: Nothing
+        :rtype: None
+        """
+        if flags is None:
+            logger.warning("No flags provided")
+            return
+
+        if isinstance(flags, int):
+            flags = [flags]
+
+        for flag in flags:
+            if flag not in FLAGS:
+                logger.warning(f"Current flag {flag} not supported")
+                continue
+
+            for daemon in self.daemons:
+                if flag == START:
+                    daemon.start()
+                elif flag == STOP:
+                    daemon.stop()
+                elif flag == RESTART:
+                    daemon.restart()
+                elif flag == STATUS:
+                    daemon.status()
+
+        # Cleaning daemons
+        self.daemons.clear()
 
     def add(self, daemon: Daemon) -> None:
         """
