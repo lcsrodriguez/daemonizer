@@ -44,6 +44,7 @@ class DaemonHandler:
         """
         if not self.has_run:
             self.has_run = True
+            logger.info("Running handler")
 
             # TODO: Adding handler part here for each registered daemons
             print(self.daemons)
@@ -57,4 +58,5 @@ class DaemonHandler:
         :rtype: None
         """
         if issubclass(daemon.__class__, Daemon):  # isinstance(other, Daemon):
+            logger.info(f"Registering new daemon {daemon}")
             self.daemons.append(daemon)
