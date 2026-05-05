@@ -114,6 +114,24 @@ class UNIXDaemon(Daemon):
         """
         return self.daemon_args
 
+    def args(self) -> Tuple[Any, ...]:
+        """
+        Function to access positional arguments (defined at daemon definition)
+        from daemon's body
+        :return: Positional arguments
+        :rtype: Tuple[Any, ...]
+        """
+        return self.daemon_args.get("args", ())  # type: ignore[union-attr, return-value]
+
+    def kwargs(self) -> Dict[str, Any]:
+        """
+        Function to access keyword arguments (defined at daemon definition)
+        from daemon's body
+        :return: Keyword arguments
+        :rtype: Dict[str, Any]
+        """
+        return self.daemon_args.get("kwargs", {})  # type: ignore[union-attr, return-value]
+
     def _deleting_pidfile(self) -> None:
         """
         Function to clean-delete associated PID file
@@ -183,7 +201,7 @@ class UNIXDaemon(Daemon):
             sys.exit(1)
 
         # Start the daemonization process
-        self.daemonize()
+        self._daemonize()
         self.run()
 
     def restart(self) -> None:
@@ -236,13 +254,13 @@ class UNIXDaemon(Daemon):
         """
         ...
 
-    def daemonize(self) -> None:
+    def _daemonize(self) -> None:
         """
         Daemonize the process by applying the UNIX double fork method.
         :return: Nothing
         :rtype: None
         """
-        print("daemonize")
+        logger.info("Daemonizing process...")
 
         # Perform first fork
         try:
@@ -336,5 +354,5 @@ class UNIXDaemon(Daemon):
 
 
 # Class aliases
-LinuxDaemon = UNIXDaemon
-MacOSDaemon = UNIXDaemon
+# LinuxDaemon = UNIXDaemon
+# MacOSDaemon = UNIXDaemon
