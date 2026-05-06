@@ -57,7 +57,7 @@ class Daemon(ABC):
         ...
 
     @abstractmethod
-    def daemonize(self):
+    def _daemonize(self):
         """
         Function to daemonize a specific logic
         :return: Nothing
