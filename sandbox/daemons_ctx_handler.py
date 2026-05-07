@@ -11,5 +11,10 @@ logger = get_logger(__name__)
 # if __name__ == "__main__":
 # Daemons handler
 with DaemonHandler() as h:
-    h.add(SampleDaemon1(name="daemon_1"))
-    h.add(SampleDaemon2(name="daemon_2"))
+    h.stop(SampleDaemon1(name="daemon_1"))
+    h.stop(SampleDaemon2(name="daemon_2"))
+    h.status(SampleDaemon1(name="daemon_1"))
+    # h.start
+    # h.stop
+    # h.status
+    # h.restart
