@@ -3,6 +3,7 @@
 from multiprocessing import Process, set_start_method
 from typing import List
 
+from daemonizer.constants import MULTIPROC_START_METHOD
 from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.daemons.flags import FLAGS, RESTART, START, STATUS, STOP
 from daemonizer.utils.logs import get_logger
@@ -29,8 +30,14 @@ class DaemonHandler:
         :rtype: DaemonHandler
         """
         # Setting new process start method to fork
-        # docs:
-        set_start_method("fork")
+        # docs: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.set_start_method
+        # docs: https://docs.python.org/3/library/multiprocessing.html#multiprocessing-start-methods
+        try:
+            set_start_method(method=MULTIPROC_START_METHOD)
+        except RuntimeError as exc_:
+            logger.warning(
+                f"Multiprocessing start method has already been set previously (error: {exc_})"
+            )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
