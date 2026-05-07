@@ -1,7 +1,9 @@
 """Context manager definition for modern daemon handler"""
 
-from typing import List
+from multiprocessing import Process, set_start_method
+from typing import List, Tuple
 
+from daemonizer.constants import MULTIPROC_START_METHOD
 from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.daemons.flags import FLAGS, RESTART, START, STATUS, STOP
 from daemonizer.utils.logs import get_logger
@@ -18,7 +20,7 @@ class DaemonHandler:
         """
         Constructor func
         """
-        self.daemons: List[Daemon] = []
+        self.daemon_requests: List[Tuple[Daemon, int]] = []
         self.has_run: bool = False
 
     def __enter__(self) -> "DaemonHandler":
@@ -27,6 +29,15 @@ class DaemonHandler:
         :return: Current object
         :rtype: DaemonHandler
         """
+        # Setting new process start method to fork
+        # docs: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.set_start_method
+        # docs: https://docs.python.org/3/library/multiprocessing.html#multiprocessing-start-methods
+        try:
+            set_start_method(method=MULTIPROC_START_METHOD)
+        except RuntimeError as exc_:
+            logger.warning(
+                f"Multiprocessing start method has already been set previously (error: {exc_})"
+            )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -47,51 +58,139 @@ class DaemonHandler:
             self.has_run = True
             logger.info("Running handler")
 
-            # TODO: Adding handler part here for each registered daemons
-            self.perform(flags=[START])
+            self.perform()
 
-    def perform(self, flags: List[int] | int | None = None) -> None:
+    # TODO: Multiprocessing for each handler
+    @staticmethod
+    def _perform_op_on_daemon(
+        daemon: Daemon | None = None, flag: int | None = None
+    ) -> None:
         """
-        Function to perform operations on currently-registered daemons.
-        This function handles START, STOP, RESTART and STATUS flags (defined in `core.daemons.flags`)
-        :param flags: Flags to be performed on currently registered daemons
-        :type flags: List[int] | int | None
+        Function to perform an operation on a given daemon
+        :param daemon: Input daemon
+        :type daemon: Daemon | None
+        :param flag: Flag of operation to be performed on given daemon
+        :type flag: int | None
         :return: Nothing
         :rtype: None
         """
-        if flags is None:
-            logger.warning("No flags provided")
+
+        if daemon is None:
+            logger.error("No daemon provided")
             return
 
-        if isinstance(flags, int):
-            flags = [flags]
+        if flag is None:
+            logger.error("Invalid input flag")
+            return
 
-        for flag in flags:
-            if flag not in FLAGS:
-                logger.warning(f"Current flag {flag} not supported")
-                continue
+        # Applying operation to given
+        if flag == START:
+            daemon.start()
+        elif flag == STOP:
+            daemon.stop()
+        elif flag == RESTART:
+            daemon.restart()
+        elif flag == STATUS:
+            daemon.status()
 
-            for daemon in self.daemons:
-                if flag == START:
-                    daemon.start()
-                elif flag == STOP:
-                    daemon.stop()
-                elif flag == RESTART:
-                    daemon.restart()
-                elif flag == STATUS:
-                    daemon.status()
-
-        # Cleaning daemons
-        self.daemons.clear()
-
-    def add(self, daemon: Daemon) -> None:
+    def perform(self) -> None:
         """
-        Function to register a new daemon to the handler
-        :param daemon: Daemon object to be registered
-        :type daemon: Daemon
+        Function to perform operations on currently-registered daemon requests.
+        This function handles START, STOP, RESTART and STATUS flags (defined in `core.daemons.flags`)
         :return: Nothing
         :rtype: None
         """
-        if issubclass(daemon.__class__, Daemon):  # isinstance(other, Daemon):
-            logger.info(f"Registering new daemon {daemon}")
-            self.daemons.append(daemon)
+
+        processes: List[Process] = []
+        # Processing each request
+        for daemon, flag in self.daemon_requests:
+            p = Process(target=self._perform_op_on_daemon, args=(daemon, flag))
+            # self._perform_op_on_daemon(daemon=daemon, flag=flag)
+            processes.append(p)
+
+        # Starting processes
+        for p in processes:
+            p.start()
+
+        # Joining (waiting for termination) processes
+        for p in processes:
+            p.join()
+
+        # Cleaning daemons
+        self.daemon_requests.clear()
+
+    def _add_request(
+        self, daemon: Daemon | None = None, flag: int | None = None
+    ) -> None:
+        """
+        Function to add a request to the daemon
+        :param daemon: Input daemon
+        :type daemon: Daemon | None
+        :param flag: Flag operation to be performed on given daemon
+        :type flag: int | None
+        :return: Nothing
+        :rtype: None
+        """
+
+        if daemon is None:
+            logger.error("No daemon provided")
+            return
+
+        if not issubclass(daemon.__class__, Daemon):  # isinstance(other, Daemon):
+            logger.error("Invalid input daemon")
+            return
+
+        if flag is None:
+            logger.error("Invalid input flag")
+            return
+
+        if flag not in FLAGS:
+            logger.error(f"Current flag {flag} not supported")
+            return
+
+        # logger.info(f"Registering new request for daemon: {daemon} (operation: {flag})")
+        self.daemon_requests.append((daemon, flag))
+
+    def start(self, daemon: Daemon | None = None) -> "DaemonHandler":
+        """
+        Function to add a request to start input daemon
+        :param daemon: Daemon
+        :type daemon: Daemon | None
+        :return: Self object
+        :rtype: DaemonHandler
+        """
+        self._add_request(daemon, START)
+        return self
+
+    def stop(self, daemon: Daemon | None = None) -> "DaemonHandler":
+        """
+        Function to add a request to stop input daemon
+        :param daemon: Daemon
+        :type daemon: Daemon | None
+        :return: Self object
+        :rtype: DaemonHandler
+        """
+        self._add_request(daemon, STOP)
+        return self
+
+    def status(self, daemon: Daemon | None = None) -> "DaemonHandler":
+        """
+        Function to add a request to get status from input daemon
+        :param daemon: Daemon
+        :type daemon: Daemon | None
+        :return: Self object
+        :rtype: DaemonHandler
+        """
+        self._add_request(daemon, STATUS)
+        return self
+
+    def restart(self, daemon: Daemon | None = None) -> "DaemonHandler":
+        """
+        Function to add a request to restart input daemon
+        :param daemon: Daemon
+        :type daemon: Daemon | None
+        :return: Self object
+        :rtype: DaemonHandler
+        """
+        self._add_request(daemon, RESTART)
+        return self

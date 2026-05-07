@@ -16,34 +16,73 @@ allowing them to run in the background as standalone logics.
 - Compatible with UNIX-like systems
 - Python 3.7+ support
 
-## Installation
+## Getting started
 
-Install using pip:
+Install package using `uv` or `pip`:
 
-```bash
-pip install daemonizer
+```shell
+uv add daemonizer # pip install daemonizer
 ```
 
-## Usage
+Create a Python script `daemon.py` where you can define your daemon logic following below framework:
 
-Create a Python script `main.py` with the following content:
 ```python
-import datetime, time
+from datetime import datetime
+from time import sleep
 
-from daemonizer.unix_daemon import UNIXDaemon, handler
-from daemonizer.pidfile import Pidfile
+from daemonizer.core.daemons.logic import forever_loop
+from daemonizer.core.daemons.unix import UNIXDaemon
 
-class TestDaemon(UNIXDaemon):
-    def run(self):
-        while True:
-            with open("/tmp/test_daemon.log", "a") as f:
-                f.write(f"Hello, current time is: {datetime.datetime.now()}\n")
-            time.sleep(1)
+class SampleDaemon(UNIXDaemon):
+    """ Sample daemon """
 
-if __name__ == "__main__":
-    handler(TestDaemon(name="test_daemon", pidfile=Pidfile(pid_filename="test_daemon.pid", pid_path="/tmp")))
+    @forever_loop(catch_exceptions=False, after_delay=0.01)
+    def run(self) -> None:
+        with open("/tmp/hello_daemon.log", "a") as f:
+            f.write(f"Hello, World {datetime.now()}\n")
+            f.write(f"{self.kwargs().get('ssa', None)}\n")
+        sleep(1)
 ```
 
+Defining a daemon is very simple:
+1. Create a subclass of `UNIXDaemon`
+2. Just overload the `run(...)` method with your logic to be executed in the daemon
+
+> [!NOTE]
+> No need to worry about `while True:` loop. If you decorate the `run(...)` method with the `@forever_loop(...)` decorator,
+> the logic defined inside will be **executed infinitely**.
+>
+> Optional arguments are available for the `@forever_loop(...)` decorator. (See docs)
+
+Once defined, you can start a daemon using two methods:
+
+- Using `handler` func:
+```python
+if __name__ == "__main__":
+    handler(SampleDaemon(name="daemon_1"))
+```
+
+```shell
+uv run daemon.py [start|stop|restart|status]
+```
+
+- Using context manager handler with ` DaemonHandler()`:
+```python
+from daemonizer.core.handlers.ctx_manager import DaemonHandler
+# Daemons handler
+with DaemonHandler() as h:
+    h.add(SampleDaemon1(name="daemon_1"))
+    h.add(SampleDaemon2(name="daemon_2"))
+```
+
+- Using CLI:
+
+```shell
+daemonizer start daemon.py # START op will be performed on all daemons defined in this file
+daemonizer start daemon.py SampleDaemon1 # START op will be performed **ONLY** on `SampleDaemon1` defined in this file
+```
+
+- Using API or web-app *(WIP)*
 
 The package provides a simple command-line interface to interact with the daemonized process.
 The following commands are available:
@@ -54,14 +93,13 @@ $ python3 main.py {start,stop,restart,status}
 
 ## Contribute
 
-```
+Clone the repo, improve the code base and submit a pull request
+
+```shell
 git clone https://github.com/lcsrodriguez/daemonizer.git
 cd daemonizer/
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-
-pre-commit
-pre-commit install
+uv sync
+pre-commit install-hooks
 ```
 
 
