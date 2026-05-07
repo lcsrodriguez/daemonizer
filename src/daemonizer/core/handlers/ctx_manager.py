@@ -1,5 +1,6 @@
 """Context manager definition for modern daemon handler"""
 
+from multiprocessing import Process, set_start_method
 from typing import List
 
 from daemonizer.core.daemons.base import Daemon
@@ -27,6 +28,9 @@ class DaemonHandler:
         :return: Current object
         :rtype: DaemonHandler
         """
+        # Setting new process start method to fork
+        # docs:
+        set_start_method("fork")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -50,6 +54,48 @@ class DaemonHandler:
             # TODO: Adding handler part here for each registered daemons
             self.perform(flags=[START])
 
+    # TODO: Multiprocessing for each handler
+    @staticmethod
+    def _perform_op_on_daemon(
+        daemon: Daemon | None = None, flag: int | None = None
+    ) -> None:
+        """
+        Function to perform an operation on a given daemon
+        :param daemon: Input daemon
+        :type daemon: Daemon | None
+        :param flag: Flag of operation to be performed on given daemon
+        :type flag: int | None
+        :return: Nothing
+        :rtype: None
+        """
+
+        # TODO: to be used in perform(...)
+        if daemon is None:
+            logger.error("No daemon provided")
+            return
+
+        if not issubclass(daemon.__class__, Daemon):
+            logger.error("Invalid input daemon")
+            return
+
+        if flag is None:
+            logger.error("Invalid input flag")
+            return
+
+        if flag not in FLAGS:
+            logger.error(f"Current flag {flag} not supported")
+            return
+
+        # Applying operation to given
+        if flag == START:
+            daemon.start()
+        elif flag == STOP:
+            daemon.stop()
+        elif flag == RESTART:
+            daemon.restart()
+        elif flag == STATUS:
+            daemon.status()
+
     def perform(self, flags: List[int] | int | None = None) -> None:
         """
         Function to perform operations on currently-registered daemons.
@@ -67,19 +113,19 @@ class DaemonHandler:
             flags = [flags]
 
         for flag in flags:
-            if flag not in FLAGS:
-                logger.warning(f"Current flag {flag} not supported")
-                continue
-
+            processes: List[Process] = []
             for daemon in self.daemons:
-                if flag == START:
-                    daemon.start()
-                elif flag == STOP:
-                    daemon.stop()
-                elif flag == RESTART:
-                    daemon.restart()
-                elif flag == STATUS:
-                    daemon.status()
+                p = Process(target=self._perform_op_on_daemon, args=(daemon, flag))
+                # self._perform_op_on_daemon(daemon=daemon, flag=flag)
+                processes.append(p)
+
+            # Starting processes
+            for p in processes:
+                p.start()
+
+            # Joining (waiting for termination) processes
+            for p in processes:
+                p.join()
 
         # Cleaning daemons
         self.daemons.clear()
