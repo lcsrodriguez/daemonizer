@@ -1,6 +1,7 @@
 """Base daemon"""
 
 from abc import ABC, abstractmethod
+from multiprocessing.synchronize import Lock as LockType
 from types import FrameType
 
 
@@ -73,6 +74,17 @@ class Daemon(ABC):
         :type signum: int
         :param frame: Frame
         :type frame: FrameType
+        :return: Nothing
+        :rtype: None
+        """
+        ...
+
+    @abstractmethod
+    def set_lock(self, lock: LockType | None) -> None:
+        """
+        Function to set lock for PID file writes
+        :param lock: Multiprocessing lock to protect PID file on-disk writes
+        :type lock: LockType | None
         :return: Nothing
         :rtype: None
         """

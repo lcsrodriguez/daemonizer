@@ -1,7 +1,8 @@
 """Context manager definition for modern daemon handler"""
 
-from multiprocessing import Process, set_start_method
-from typing import List, Tuple
+from multiprocessing import Lock, Process, set_start_method
+from multiprocessing.synchronize import Lock as LockType
+from typing import Dict, List, Set, Tuple, Type
 
 from daemonizer.constants import MULTIPROC_START_METHOD
 from daemonizer.core.daemons.base import Daemon
@@ -22,6 +23,13 @@ class DaemonHandler:
         """
         self.daemon_requests: List[Tuple[Daemon, int]] = []
         self.has_run: bool = False
+
+        # Set of daemon classes (types) from the daemon registered by the user
+        # We keep this information as we are setting up a multiproc `Lock` for each type of daemon
+        self.daemon_types: Set[Type] = set()
+
+        # Storing daemon locks (daemon type -> Lock)
+        self.daemon_op_locks: Dict[Type, LockType] = {}
 
     def __enter__(self) -> "DaemonHandler":
         """
@@ -63,7 +71,9 @@ class DaemonHandler:
     # TODO: Multiprocessing for each handler
     @staticmethod
     def _perform_op_on_daemon(
-        daemon: Daemon | None = None, flag: int | None = None
+        daemon: Daemon | None = None,
+        flag: int | None = None,
+        lock: LockType | None = None,
     ) -> None:
         """
         Function to perform an operation on a given daemon
@@ -71,6 +81,8 @@ class DaemonHandler:
         :type daemon: Daemon | None
         :param flag: Flag of operation to be performed on given daemon
         :type flag: int | None
+        :param lock: Lock from the input daemon type
+        :type lock: LockType | None
         :return: Nothing
         :rtype: None
         """
@@ -82,6 +94,9 @@ class DaemonHandler:
         if flag is None:
             logger.error("Invalid input flag")
             return
+
+        # Setting up lock to underlying daemon to protect PID file writing
+        daemon.set_lock(lock=lock)
 
         # Applying operation to given
         if flag == START:
@@ -101,10 +116,20 @@ class DaemonHandler:
         :rtype: None
         """
 
+        # Issuing
+        for daemon_type in self.daemon_types:
+            self.daemon_op_locks[daemon_type] = Lock()
+
         processes: List[Process] = []
         # Processing each request
         for daemon, flag in self.daemon_requests:
-            p = Process(target=self._perform_op_on_daemon, args=(daemon, flag))
+            lock = self.daemon_op_locks.get(daemon.__class__, None)
+            if lock is None:
+                logger.warning(
+                    f"No lock for this type of daemon: {daemon.__class__.__name__}"
+                )
+
+            p = Process(target=self._perform_op_on_daemon, args=(daemon, flag, lock))
             # self._perform_op_on_daemon(daemon=daemon, flag=flag)
             processes.append(p)
 
@@ -149,6 +174,10 @@ class DaemonHandler:
             return
 
         # logger.info(f"Registering new request for daemon: {daemon} (operation: {flag})")
+        # Adding daemon type to set
+        self.daemon_types.add(daemon.__class__)
+
+        # Adding operation on daemon request
         self.daemon_requests.append((daemon, flag))
 
     def start(self, daemon: Daemon | None = None) -> "DaemonHandler":

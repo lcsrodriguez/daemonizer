@@ -6,6 +6,7 @@ import os
 import signal
 import sys
 import time
+from multiprocessing.synchronize import Lock as LockType
 from typing import Any, Dict, Tuple
 
 from daemonizer.core.daemons.base import Daemon
@@ -70,6 +71,7 @@ class UNIXDaemon(Daemon):
         """
 
         # Daemon name
+        self.lock: LockType | None = None
         self.daemon_name: str = name if name != "" else "unix_daemon"
 
         if pidfile is None:
@@ -365,6 +367,18 @@ class UNIXDaemon(Daemon):
         :rtype:
         """
         return not is_empty_function(func=self.run)
+
+    def set_lock(self, lock: LockType | None) -> None:
+        """
+        Function to set lock for PID file writes
+        :param lock: Multiprocessing lock to protect PID file on-disk writes
+        :type lock: LockType | None
+        :return: Nothing
+        :rtype: None
+        """
+        logger.info(f"Setting lock... (UNIX.py): name := {self.daemon_name}")
+        self.lock = lock
+        self.pidfile.lock = lock
 
 
 # Class aliases
