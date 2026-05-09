@@ -3,11 +3,11 @@
 import os
 import random
 import string
+from multiprocessing.synchronize import Lock
 from pathlib import Path
 
 from daemonizer.constants import DEFAULT_PID_FILENAME_LENGTH
 from daemonizer.exceptions import (
-    AlreadyExistingPIDFileError,
     InvalidPIDError,
     MissingPIDFileError,
 )
@@ -92,6 +92,8 @@ class Pidfile:
         # Boolean to check if the pidfile exists in current filesystem
         self.is_active: bool = False
 
+        self.lock: Lock | None = None
+
     def __str__(self) -> str:
         """
         Method to return a string representation of the class.
@@ -133,12 +135,31 @@ class Pidfile:
         :return:
         :rtype: bool
         """
+
+        if self.lock:
+            self.lock.acquire(block=True)
+            logger.info(f"BLOCKING LOCK A - {self.pid_filename}")
+
         pid = int(pid)
         self.pid_value = pid
 
         if self.is_existing_file():
-            raise AlreadyExistingPIDFileError("PID file already exists")
+            logger.info(f"toto: current -> {self.pid_filename}")
+            # File is already existing
+            i = 1
+            self.pid_filename = f"{self.pid_name}_{i}.pid"
+            self.abs_path = self.get_abs_path()
 
+            # If file still exists, just pick the next one
+            while os.path.isfile(self.abs_path):
+                logger.info(f"tutu {i}")
+                i += 1
+                self.pid_filename = f"{self.pid_name}_{i}.pid"
+                self.abs_path = self.get_abs_path()
+
+        self.abs_path = self.get_abs_path()
+        # raise AlreadyExistingPIDFileError("PID file already exists")
+        logger.warning(self.abs_path)
         if pid <= 0:
             raise InvalidPIDError("Invalid pid value")
 
@@ -149,6 +170,10 @@ class Pidfile:
             return True
         except IOError:
             return False
+        finally:
+            if self.lock:
+                self.lock.release()
+                logger.info(f"BLOCKING LOCK R - {self.pid_filename}")
 
     def read(self) -> int:
         """
