@@ -3,6 +3,9 @@
 from abc import ABC, abstractmethod
 from multiprocessing.synchronize import Lock as LockType
 from types import FrameType
+from typing import Tuple
+
+# Add possibility to run logic block **BEFORE** the daemonization and fail if raise for ex
 
 
 class Daemon(ABC):
@@ -11,6 +14,8 @@ class Daemon(ABC):
 
     Daemon base class to be inherited by other classes
     """
+
+    __slots__: Tuple[str, ...] = ("daemon_name",)
 
     @abstractmethod
     def start(self) -> None:
