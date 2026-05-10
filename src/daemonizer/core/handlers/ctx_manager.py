@@ -31,6 +31,10 @@ class DaemonHandler:
         # Storing daemon locks (daemon type -> Lock)
         self.daemon_op_locks: Dict[Type, LockType] = {}
 
+        # Set of daemon names to be tested
+        self.daemon_names: Set[str] = set()
+        self.ctx_errors: List[str] = []
+
     def __enter__(self) -> "DaemonHandler":
         """
         Context manager entry point
@@ -62,6 +66,13 @@ class DaemonHandler:
         :return: Nothing
         :rtype: None
         """
+        if self.ctx_errors:
+            logger.error("Error(s) while registering daemon requests:")
+            for err in self.ctx_errors:
+                logger.error(f"- {err}")
+            logger.error("Aborting operations on daemon")
+            return
+
         if not self.has_run:
             self.has_run = True
             logger.info("Running handler")
@@ -188,6 +199,13 @@ class DaemonHandler:
         :return: Self object
         :rtype: DaemonHandler
         """
+        if daemon is not None:
+            if daemon.daemon_name in self.daemon_names:
+                self.ctx_errors.append(
+                    f"Duplicated daemon name {daemon.daemon_name} tried to be inserted"
+                )
+            # raise ValueError("Daemon with this name is already started")
+            self.daemon_names.add(daemon.daemon_name)
         self._add_request(daemon, START)
         return self
 
