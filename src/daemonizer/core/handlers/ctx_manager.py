@@ -15,6 +15,16 @@ logger = get_logger(__name__)
 class DaemonHandler:
     """
     Daemon handler class representing a context manager to be used in public API
+
+
+    Multiple operations are supported: START, STOP, STATUS, RESTART.
+
+    When multiple START operations are requested under the same handler,
+    multiprocessing must be involved to make sure the first process daemonization is not blocking
+    and other daemons can be started *after* or *at the same time* without losing context.
+    RESTART (which also involves an underlying START op) is in the same situation.
+
+    STATUS and STOP can be executed from the same process.
     """
 
     def __init__(self) -> None:
