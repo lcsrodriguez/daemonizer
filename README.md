@@ -71,9 +71,12 @@ uv run daemon.py [start|stop|restart|status]
 from daemonizer.core.handlers.ctx_manager import DaemonHandler
 # Daemons handler
 with DaemonHandler() as h:
-    h.add(SampleDaemon1(name="daemon_1"))
-    h.add(SampleDaemon2(name="daemon_2"))
+    h.start(SampleDaemon1(name="daemon_1"))
+    h.start(SampleDaemon2(name="daemon_2"))
 ```
+
+> [!WARNING]
+> Daemon should have a **unique** name at global level (no duplicate).
 
 - Using CLI:
 
