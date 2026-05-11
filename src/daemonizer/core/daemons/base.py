@@ -1,7 +1,11 @@
 """Base daemon"""
 
 from abc import ABC, abstractmethod
+from multiprocessing.synchronize import Lock as LockType
 from types import FrameType
+from typing import Tuple
+
+# Add possibility to run logic block **BEFORE** the daemonization and fail if raise for ex
 
 
 class Daemon(ABC):
@@ -10,6 +14,8 @@ class Daemon(ABC):
 
     Daemon base class to be inherited by other classes
     """
+
+    __slots__: Tuple[str, ...] = ("daemon_name",)
 
     @abstractmethod
     def start(self) -> None:
@@ -73,6 +79,17 @@ class Daemon(ABC):
         :type signum: int
         :param frame: Frame
         :type frame: FrameType
+        :return: Nothing
+        :rtype: None
+        """
+        ...
+
+    @abstractmethod
+    def set_lock(self, lock: LockType | None) -> None:
+        """
+        Function to set lock for PID file writes
+        :param lock: Multiprocessing lock to protect PID file on-disk writes
+        :type lock: LockType | None
         :return: Nothing
         :rtype: None
         """
