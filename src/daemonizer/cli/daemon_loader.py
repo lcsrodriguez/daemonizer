@@ -95,6 +95,7 @@ def find_daemon_classes(
         if cls is UNIXDaemon or cls is Daemon:
             continue
 
+        # TODO: Handle c-tor arguments (inspect.signature)
         if issubclass(cls, UNIXDaemon):  # mro check otherwise
             if strict:
                 # Handling case where we only want daemons from the script itself (not from its dependencies)
@@ -105,11 +106,15 @@ def find_daemon_classes(
     return daemons
 
 
-def get_daemon_instances(daemons: List[Type] | None = None) -> List[Any]:
+def get_daemon_instances(
+    daemons: List[Type] | None = None, only_includes: List[str] | None = None
+) -> List[Any]:
     """
     Function to get daemon instances from daemon classes
     :param daemons: Input daemon classes
     :type daemons: List[Type] | None
+    :param only_includes: List of daemon classes to be included only if found in the module (by func fun: `find_daemon_classes`)
+    :type only_includes: List[str] | None
     :return: List of daemon objects (1 y input daemon class)
     :rtype: List[Any]
     """
@@ -119,6 +124,8 @@ def get_daemon_instances(daemons: List[Type] | None = None) -> List[Any]:
         return daemon_instances
 
     for daemon in daemons:
+        if only_includes:
+            if daemon.__class__.__name__ not in only_includes:
+                continue
         daemon_instances.append(daemon())
-
     return daemon_instances
