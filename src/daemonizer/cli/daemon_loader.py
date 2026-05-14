@@ -36,8 +36,16 @@ def load_module_from_script(script_path: Path | str | None = None) -> ModuleType
     # Making the path absolute, resolving all symlinks
     path: Path = script_path.resolve()
 
+    # Checking extension (.py)
+    extension: str = "".join(path.suffixes)
+    if extension not in [".py", ".pyi"]:
+        logger.error(f"Script extension {extension} not supported")
+        return None
+
     # Module name (final path component, without its suffix)
     module_name = path.stem
+
+    logger.info(f"Loading module {module_name} from script {path.absolute()}")
 
     # A factory function for creating a ModuleSpec instance based on the path to a file
     # ModuleSpec := A specification for a module’s import-system-related state
