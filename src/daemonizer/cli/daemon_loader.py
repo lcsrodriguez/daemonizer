@@ -9,7 +9,7 @@ import inspect
 from _frozen_importlib import ModuleSpec
 from pathlib import Path
 from types import ModuleType
-from typing import List, Type
+from typing import Any, List, Type
 
 from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.daemons.unix import UNIXDaemon
@@ -95,3 +95,22 @@ def find_daemon_classes(
             daemons.append(cls)
 
     return daemons
+
+
+def get_daemon_instances(daemons: List[Type] | None = None) -> List[Any]:
+    """
+    Function to get daemon instances from daemon classes
+    :param daemons: Input daemon classes
+    :type daemons: List[Type] | None
+    :return: List of daemon objects (1 y input daemon class)
+    :rtype: List[Any]
+    """
+
+    daemon_instances: List[Any] = []
+    if daemons is None:
+        return daemon_instances
+
+    for daemon in daemons:
+        daemon_instances.append(daemon())
+
+    return daemon_instances
