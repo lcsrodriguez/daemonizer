@@ -5,10 +5,14 @@
 """
 
 import importlib.util
+import inspect
 from _frozen_importlib import ModuleSpec
 from pathlib import Path
 from types import ModuleType
+from typing import List, Type
 
+from daemonizer.core.daemons.base import Daemon
+from daemonizer.core.daemons.unix import UNIXDaemon
 from daemonizer.utils.logs import get_logger
 
 logger = get_logger(__name__)
@@ -58,3 +62,28 @@ def load_module_from_script(script_path: Path | str | None = None) -> ModuleType
     # (executes the module in its own namespace when a module is imported or reloaded)
     spec.loader.exec_module(module=module)
     return module
+
+
+def find_daemon_classes(module: ModuleType | None = None) -> List[Type]:
+    """
+    Function to scan input module and collect + return a list of specific daemon classes
+    :param module: Input module
+    :type module: ModuleType | None
+    :return: List of daemon classes
+    :rtype: List[Type]
+    """
+
+    daemons: List[Type] = []
+    if module is None or not isinstance(module, ModuleType):
+        logger.error("Input module is invalid")
+        return daemons
+
+    for e, cls in inspect.getmembers(module, inspect.isclass):
+        # Skipping UNIXDaemon itself (not relevant)
+        if cls is UNIXDaemon or cls is Daemon:
+            continue
+
+        if issubclass(cls, UNIXDaemon):  # mro check otherwise
+            daemons.append(cls)
+
+    return daemons
