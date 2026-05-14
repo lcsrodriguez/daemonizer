@@ -64,11 +64,15 @@ def load_module_from_script(script_path: Path | str | None = None) -> ModuleType
     return module
 
 
-def find_daemon_classes(module: ModuleType | None = None) -> List[Type]:
+def find_daemon_classes(
+    module: ModuleType | None = None, strict: bool = True
+) -> List[Type]:
     """
     Function to scan input module and collect + return a list of specific daemon classes
     :param module: Input module
     :type module: ModuleType | None
+    :param strict: Return only (True) the classes from the script itself (not those imported to the script from other sub-modules/dependencies)
+    :type strict: bool
     :return: List of daemon classes
     :rtype: List[Type]
     """
@@ -84,6 +88,10 @@ def find_daemon_classes(module: ModuleType | None = None) -> List[Type]:
             continue
 
         if issubclass(cls, UNIXDaemon):  # mro check otherwise
+            if strict:
+                # Handling case where we only want daemons from the script itself (not from its dependencies)
+                if cls.__module__ != module.__name__:
+                    continue
             daemons.append(cls)
 
     return daemons
