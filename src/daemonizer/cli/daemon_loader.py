@@ -20,7 +20,9 @@ logger = get_logger(__name__)
 
 def load_module_from_script(script_path: Path | str | None = None) -> ModuleType | None:
     """
-    Function to load a specific module from a given input Python script
+    Function to load a specific module from a given input Python script.
+    This function is using **importlib** (docs: https://docs.python.org/3/library/importlib.html)
+    and **pathlib** (docs: https://docs.python.org/3/library/pathlib.html).
     :param script_path: Input script path
     :type script_path: Path | str | None
     :return: Module object imported via importlib.util if successful, None otherwise
@@ -76,7 +78,8 @@ def find_daemon_classes(
     module: ModuleType | None = None, strict: bool = True
 ) -> List[Type]:
     """
-    Function to scan input module and collect + return a list of specific daemon classes
+    Function to scan input module and collect + return a list of specific daemon classes.
+    Module scan is performed using the **inspect** module (docs: https://docs.python.org/3/library/inspect.html)
     :param module: Input module
     :type module: ModuleType | None
     :param strict: Return only (True) the classes from the script itself (not those imported to the script from other sub-modules/dependencies)
@@ -90,6 +93,7 @@ def find_daemon_classes(
         logger.error("Input module is invalid")
         return daemons
 
+    # Checking all module members (docs: https://docs.python.org/3/library/inspect.html#inspect.getmembers)
     for e, cls in inspect.getmembers(module, inspect.isclass):
         # Skipping UNIXDaemon itself (not relevant)
         if cls is UNIXDaemon or cls is Daemon:
@@ -101,6 +105,7 @@ def find_daemon_classes(
                 # Handling case where we only want daemons from the script itself (not from its dependencies)
                 if cls.__module__ != module.__name__:
                     continue
+            # print(f"Sig: {inspect.signature(cls).parameters["name"].annotation}")
             daemons.append(cls)
 
     return daemons
