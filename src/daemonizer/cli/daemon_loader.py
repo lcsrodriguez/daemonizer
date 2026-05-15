@@ -125,7 +125,7 @@ def get_daemon_instances(
 
     for daemon in daemons:
         if only_includes:
-            if daemon.__class__.__name__ not in only_includes:
+            if daemon.__name__ not in only_includes:
                 continue
         daemon_instances.append(daemon())
     return daemon_instances
