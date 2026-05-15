@@ -9,7 +9,7 @@ import inspect
 from _frozen_importlib import ModuleSpec
 from pathlib import Path
 from types import ModuleType
-from typing import Any, List, Type
+from typing import Any, Dict, List, Type
 
 from daemonizer.core.daemons.base import Daemon
 from daemonizer.core.daemons.unix import UNIXDaemon
@@ -112,13 +112,15 @@ def find_daemon_classes(
 
 
 def get_daemon_instances(
-    daemons: List[Type] | None = None, only_includes: List[str] | None = None
+    daemons: List[Type] | None = None,
+    only_includes: Dict[str, str] | None = None,
+    script_path: Path | None = None,
 ) -> List[Any]:
     """
     Function to get daemon instances from daemon classes
     :param daemons: Input daemon classes
     :type daemons: List[Type] | None
-    :param only_includes: List of daemon classes to be included only if found in the module (by func fun: `find_daemon_classes`)
+    :param only_includes: Dict of daemon classes (and daemon names) to be included only if found in the module (by func fun: `find_daemon_classes`)
     :type only_includes: List[str] | None
     :return: List of daemon objects (1 y input daemon class)
     :rtype: List[Any]
@@ -126,11 +128,19 @@ def get_daemon_instances(
 
     daemon_instances: List[Any] = []
     if daemons is None:
+        logger.error("Input daemon classes are invalid")
+        return daemon_instances
+
+    if script_path is None:
+        logger.error("Input script path is invalid")
         return daemon_instances
 
     for daemon in daemons:
+        daemon_name: str = script_path.stem + daemon.__name__ + "_daemon"
         if only_includes:
-            if daemon.__name__ not in only_includes:
+            if daemon.__name__ not in only_includes.keys():
                 continue
-        daemon_instances.append(daemon())
+            # TODO: Handle constructor with daemon name
+            daemon_name = only_includes.get(daemon.__name__, "")
+        daemon_instances.append(daemon(name=daemon_name))
     return daemon_instances

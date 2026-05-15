@@ -1,7 +1,7 @@
 """CLI commands"""
 
 from pathlib import Path
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import click
 
@@ -19,6 +19,7 @@ from daemonizer.core.daemons.flags import (
     STATUS,
     STOP,
 )
+from daemonizer.core.handlers.ctx_manager import DaemonHandler
 from daemonizer.utils.logs import get_logger
 
 logger = get_logger(__name__)
@@ -76,29 +77,29 @@ def start(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     # click.echo(f"START")
     click.echo(f"script: {script}")
     click.echo(f"daemons: {daemons}")
-
     click.echo(f"strict: {strict}")
 
-    """
-    daemon_instances = get_daemon_instances(
-        daemons=find_daemon_classes(
-            module=load_module_from_script(script_path=script),
-            strict=True),
-        only_includes=list(daemons)
-    )
-    """
-    _cli_parse_daemons(script, list(daemons), START, strict)
+    if len(daemons) != 0:
+        if len(daemons) % 2 != 0:
+            click.echo(
+                "You must follow pattern: DaemonClass1, DaemonName1, DaemonClass2, DaemonName2, ..., DaemonClassN, DaemonNameN"
+            )
+            return None
+    else:
+        click.echo("You must add the list of daemon classes and names")
+        return None
 
-    # click.echo(f"Daemon instances: {daemon_instances}")
-
-    # Reach input script on machine and import modules (logic inside)
-    # Scan for daemons (if 1 daemon is specified, only focus on this one, otherwise instantiate all daemons)
-    # Instantiate a new daemon object
+    daemon_classes: List[str] = [daemons[k] for k in range(len(daemons)) if k % 2 == 0]
+    daemon_names: List[str] = [daemons[k] for k in range(len(daemons)) if k % 2 == 1]
+    d_daemon_classes_names: Dict[str, str] = dict(zip(daemon_classes, daemon_names))
+    # click.echo(d_daemon_classes_names)
+    _cli_parse_daemons(script, d_daemon_classes_names, START, strict)
+    return None
 
 
 def _cli_parse_daemons(
     script: str | Path | None = None,
-    exclusive_daemon_classes: List[str] | None = None,
+    exclusive_daemon_classes_names: Dict[str, str] | None = None,
     flag_operation: int = DEFAULT_FLAG,
     strict: bool = True,
 ) -> None:
@@ -109,8 +110,8 @@ def _cli_parse_daemons(
     - operation to apply on these daemons
     :param script: Input script path
     :type script: str | Path | None
-    :param exclusive_daemon_classes: List of specific daemon classes to be run (against the logic scanned from the module). If nothing is specified, all daemons from the module must be considered.
-    :type exclusive_daemon_classes: List[str] | None
+    :param exclusive_daemon_classes_names: Dict of specific daemon classes (and names for daemons to be named) to be run (against the logic scanned from the module). If nothing is specified, all daemons from the module must be considered.
+    :type exclusive_daemon_classes_names: Dict[str, str] | None
     :param flag_operation: Flag of the operation to perform on considered daemons
     :type flag_operation: int
     :param strict: True if only daemons from current modules should be considered, False otherwise (all daemons including from dependencies)
@@ -125,10 +126,10 @@ def _cli_parse_daemons(
     if isinstance(script, str):
         script = Path(script)
 
-    if isinstance(exclusive_daemon_classes, tuple):
-        exclusive_daemon_classes = list(exclusive_daemon_classes)
+    # if isinstance(exclusive_daemon_classes_names, tuple):
+    #    exclusive_daemon_classes = list(exclusive_daemon_classes_names)
 
-    assert isinstance(exclusive_daemon_classes, list), "Daemons must be a list"
+    assert isinstance(exclusive_daemon_classes_names, dict), "Daemons must be a list"
 
     # Loading module
     module = load_module_from_script(script_path=script)
@@ -139,25 +140,31 @@ def _cli_parse_daemons(
 
     # Getting daemon instances
     daemon_instances = get_daemon_instances(
-        daemons=daemon_classes, only_includes=exclusive_daemon_classes
+        daemons=daemon_classes, only_includes=exclusive_daemon_classes_names
     )
     click.echo(f"Instances: {daemon_instances}")
 
     # Getting correct operation from input flag
-    func: Callable = _get_op_func_from_flag(flag_operation=flag_operation)
+    func_name: str = _get_op_func_from_flag2(flag_operation=flag_operation)
 
+    # TODO: Adding context handler here instead of _get_op_func_from_flag
+    with DaemonHandler() as h:
+        for daemon_instance in daemon_instances:
+            getattr(h, func_name)(daemon_instance)
+        # func(h)()
     # For each daemon instances, execute the given function
-    for daemon_instance in daemon_instances:
-        # getattr(daemon_instance, func)()
-        # daemon_instance.func()
-        func(
-            daemon_instance
-        )  # clean form as we have a lambda func whose unique parameter is the daemon instance itself
+    # for daemon_instance in daemon_instances:
+    # getattr(daemon_instance, func)()
+    # daemon_instance.func()
+    #    func(
+    #        daemon_instance
+    #    )  # clean form as we have a lambda func whose unique parameter is the daemon instance itself
     return None
 
 
 def _get_op_func_from_flag(flag_operation: int) -> Callable:
     """
+    (Not used as we are using the `DaemonHandler` context manager)
     This function will return a function that will run the specified operation,
     translated from the input flag operation. This is somehow a *mapping* function
     :param flag_operation: Valid input flag operation
@@ -178,3 +185,28 @@ def _get_op_func_from_flag(flag_operation: int) -> Callable:
         return lambda x: x.restart()
     else:
         return lambda x: None
+
+
+def _get_op_func_from_flag2(flag_operation: int) -> str:
+    """
+    (Not used as we are using the `DaemonHandler` context manager)
+    This function will return a function that will run the specified operation,
+    translated from the input flag operation. This is somehow a *mapping* function
+    :param flag_operation: Valid input flag operation
+    :type flag_operation: int
+    :return: Function name that will run the specified operation once called with a valid `Daemon` instance
+    :rtype: str
+    """
+    if flag_operation not in FLAGS:
+        return ""
+
+    if flag_operation == START:
+        return "start"
+    elif flag_operation == STOP:
+        return "stop"
+    elif flag_operation == STATUS:
+        return "status"
+    elif flag_operation == RESTART:
+        return "restart"
+    else:
+        return ""
