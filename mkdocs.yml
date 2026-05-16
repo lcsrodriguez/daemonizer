@@ -1,0 +1,51 @@
+site_name: daemonizer
+site_url: https://daemonizer.lucasrodriguez.net
+
+# Header GitHub repository
+repo_url: https://github.com/lcsrodriguez/daemonizer
+repo_name: lcsrodriguez/daemonizer
+
+theme:
+  name: material
+  language: en
+
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: black
+      accent: yellow
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: black
+      accent: yellow
+
+extra:
+  generator: false # Made with MkDocs for Material
+
+  # Google Analytics integration
+  #analytics:
+  #  provider: google
+  #  property: G-XXXXXXXXXX
+
+  #homepage: https://daemonizer.lucasrodriguez.net
+
+
+  # Socials on footer
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/lcsrodriguez/daemonizer
+      name: GitHub repository
+
+nav:
+  - Home: content/index.md
+  - Guide:
+      - Daemon Internals: content/daemon-internals.md
+      - Processes: content/process.md
+      - Signals: content/signals.md
