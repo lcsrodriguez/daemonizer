@@ -26,6 +26,22 @@ theme:
       primary: black
       accent: yellow
 
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path # Breadcrumbs
+    - toc.follow
+    - navigation.top
+
+
+
 extra:
   generator: false # Made with MkDocs for Material
 
@@ -44,8 +60,8 @@ extra:
       name: GitHub repository
 
 nav:
-  - Home: content/index.md
+  - Home: index.md
   - Guide:
-      - Daemon Internals: content/daemon-internals.md
-      - Processes: content/process.md
-      - Signals: content/signals.md
+      - Daemon Internals: daemon-internals.md
+      - Processes: process.md
+      - Signals: signals.md

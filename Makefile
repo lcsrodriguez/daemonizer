@@ -33,3 +33,6 @@ serve-docs:
 clean-docs:
 	@echo "Cleaning built docs..."
 	@rm -rf site/
+
+build-docs:
+	@mkdocs build
