@@ -290,3 +290,12 @@ def ls() -> None:
         click.echo(
             f"({i + 1}) {daemon_name} | PID := {pid} | Active?: {is_active_daemon}"
         )
+
+
+# Command: $ daemonizer pidfiles
+@cli.command()
+def pidfiles() -> None:
+    """
+    Get pid files folder. This can be used to `cd $(daemonizer pidfiles)`
+    """
+    click.echo(PID_FILES_DIR.__str__())
