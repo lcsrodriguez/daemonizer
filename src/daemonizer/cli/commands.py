@@ -122,10 +122,14 @@ def _cli_parse_daemons(
     if isinstance(script, str):
         script = Path(script)
 
+    # Checking if we have clean daemons CLI input before proceeding
+    if not _checking_cli_input_daemons(exclusive_daemon_classes_names):
+        return None
+
     if isinstance(exclusive_daemon_classes_names, tuple):
         exclusive_daemon_classes_names = list(exclusive_daemon_classes_names)
 
-    assert isinstance(exclusive_daemon_classes_names, dict), "Daemons must be a list"
+    assert isinstance(exclusive_daemon_classes_names, list), "Daemons must be a list"
 
     exclusive_daemon_classes: List[str] = [
         exclusive_daemon_classes_names[k]
@@ -222,3 +226,27 @@ def _get_op_func_from_flag2(flag_operation: int) -> str:
         return "restart"
     else:
         return ""
+
+
+def _checking_cli_input_daemons(cli_input_daemons: List[str] | None = None) -> bool:
+    """
+    Function to check daemons from CLI input
+    Daemons to be considered for given
+    :param cli_input_daemons: Daemons classes + names from input CLI entry
+    :type cli_input_daemons: List[str] | None
+    :return: True if CLI entry is valid, False otherwise
+    :rtype: bool
+    """
+
+    if cli_input_daemons is None:
+        return False
+    if len(cli_input_daemons) != 0:
+        if len(cli_input_daemons) % 2 != 0:
+            click.echo(
+                "You must follow pattern: DaemonClass1, DaemonName1, DaemonClass2, DaemonName2, ..., DaemonClassN, DaemonNameN"
+            )
+            return False
+    else:
+        click.echo("You must add the list of daemon classes and names")
+        return False
+    return True
