@@ -4,6 +4,7 @@ from typing import Tuple
 
 import click
 
+from daemonizer.cli.daemon_loader import find_daemon_classes, load_module_from_script
 from daemonizer.cli.processor import _cli_parse_daemons
 from daemonizer.constants import APP_NAME, APP_VERSION
 from daemonizer.core.daemons.flags import RESTART, START, STATUS, STOP
@@ -152,3 +153,41 @@ def status(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     :rtype: None
     """
     _cli_parse_daemons(script, list(daemons), STATUS, strict)
+
+
+# Command: $ daemonizer scan
+@cli.command()
+@click.argument(
+    "script",
+    type=click.Path(
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    required=True,
+)
+@click.option(
+    "--strict/--no-strict",
+    "-s",
+    type=click.BOOL,
+    is_flag=True,
+    required=False,
+    default=True,
+)
+def scan(script: str, strict: bool) -> None:
+    """
+    Scan daemons (CLI target)
+    :return: Nothing
+    :rtype: None
+    """
+    click.echo(f"Scan | Script: {script} - Strict: {strict}")
+
+    module = load_module_from_script(script_path=script)
+
+    daemon_classes = find_daemon_classes(module=module, strict=strict)
+    click.echo(f"Found {len(daemon_classes)} daemon classes")
+    for i, daemon_class in enumerate(daemon_classes):
+        click.echo(
+            f"{i + 1} \t {daemon_class.__name__} - (module: {daemon_class.__module__})"
+        )
