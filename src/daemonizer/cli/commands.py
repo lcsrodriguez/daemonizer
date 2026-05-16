@@ -74,23 +74,7 @@ def start(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     :return: Nothing
     :rtype: None
     """
-    # click.echo(f"START")
-    click.echo(f"script: {script}")
-    click.echo(f"daemons: {daemons}")
-    click.echo(f"strict: {strict}")
-
-    if len(daemons) != 0:
-        if len(daemons) % 2 != 0:
-            click.echo(
-                "You must follow pattern: DaemonClass1, DaemonName1, DaemonClass2, DaemonName2, ..., DaemonClassN, DaemonNameN"
-            )
-            return None
-    else:
-        click.echo("You must add the list of daemon classes and names")
-        return None
-
     _cli_parse_daemons(script, list(daemons), START, strict)
-    return None
 
 
 def _cli_parse_daemons(
