@@ -6,7 +6,7 @@ import click
 
 from daemonizer.cli.processor import _cli_parse_daemons
 from daemonizer.constants import APP_NAME, APP_VERSION
-from daemonizer.core.daemons.flags import START, STOP
+from daemonizer.core.daemons.flags import RESTART, START, STOP
 from daemonizer.utils.logs import get_logger
 
 logger = get_logger(__name__)
@@ -57,7 +57,7 @@ def version() -> None:
 )
 def start(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     """
-    Start a daemon (CLI target)
+    Start daemons (CLI target)
     :return: Nothing
     :rtype: None
     """
@@ -87,8 +87,38 @@ def start(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
 )
 def stop(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     """
-    Start a daemon (CLI target)
+    Stop daemons (CLI target)
     :return: Nothing
     :rtype: None
     """
     _cli_parse_daemons(script, list(daemons), STOP, strict)
+
+
+# Command: $ daemonizer restart
+@cli.command()
+@click.argument(
+    "script",
+    type=click.Path(
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    required=True,
+)
+@click.argument("daemons", type=click.STRING, required=False, nargs=-1)
+@click.option(
+    "--strict/--no-strict",
+    "-s",
+    type=click.BOOL,
+    is_flag=True,
+    required=False,
+    default=True,
+)
+def restart(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
+    """
+    Restart daemons (CLI target)
+    :return: Nothing
+    :rtype: None
+    """
+    _cli_parse_daemons(script, list(daemons), RESTART, strict)
