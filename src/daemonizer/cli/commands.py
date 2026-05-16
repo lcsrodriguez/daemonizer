@@ -150,7 +150,9 @@ def _cli_parse_daemons(
 
     # Getting daemon instances
     daemon_instances = get_daemon_instances(
-        daemons=found_daemon_classes, only_includes=d_exclusive_daemon_classes_names
+        daemons=found_daemon_classes,
+        only_includes=d_exclusive_daemon_classes_names,
+        script_path=script,
     )
     click.echo(f"Instances: {daemon_instances}")
 

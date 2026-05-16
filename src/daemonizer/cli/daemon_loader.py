@@ -122,6 +122,8 @@ def get_daemon_instances(
     :type daemons: List[Type] | None
     :param only_includes: Dict of daemon classes (and daemon names) to be included only if found in the module (by func fun: `find_daemon_classes`)
     :type only_includes: List[str] | None
+    :param script_path: Input script path (used to get a default daemon name in case a given daemon class (from CLI input) does not have a respective daemon name
+    :type script_path: Path | None
     :return: List of daemon objects (1 y input daemon class)
     :rtype: List[Any]
     """
