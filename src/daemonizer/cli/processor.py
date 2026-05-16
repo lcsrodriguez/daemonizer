@@ -1,5 +1,7 @@
 """Submodule to initialize and manage the bridge between CLI inputs and operations on daemons"""
 
+import os
+import signal
 from pathlib import Path
 from typing import Callable, Dict, List
 
@@ -181,3 +183,30 @@ def _checking_cli_input_daemons(cli_input_daemons: List[str] | None = None) -> b
         click.echo("You must add the list of daemon classes and names")
         return False
     return True
+
+
+def _stop_pid(pid: int | None = None, sig: int = signal.SIGTERM) -> bool:
+    """
+    Function to stop a given process for the specified PID, by sending the input sig (POSIX signal)
+    :param pid: PID of the process to stop
+    :type pid: int | None
+    :param sig: Signal to send to daemon
+    :type sig: int
+    :return: True if process was stopped, False otherwise
+    :rtype: bool
+    """
+
+    if pid is None:
+        logger.error("PID must be provided")
+        return False
+    if not isinstance(pid, int):
+        logger.error("PID must be a valid integer")
+        return False
+
+    try:
+        # Sending custom signal to process whose PID is matching
+        os.kill(pid, sig)
+        return True
+    except Exception as exc_:
+        logger.error(f"Failed to kill daemon for PID {pid}. Error: {exc_}")
+    return False

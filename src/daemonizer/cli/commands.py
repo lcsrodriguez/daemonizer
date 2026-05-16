@@ -1,11 +1,12 @@
 """CLI commands"""
 
+import signal
 from typing import Tuple
 
 import click
 
 from daemonizer.cli.daemon_loader import find_daemon_classes, load_module_from_script
-from daemonizer.cli.processor import _cli_parse_daemons
+from daemonizer.cli.processor import _cli_parse_daemons, _stop_pid
 from daemonizer.constants import APP_NAME, APP_VERSION
 from daemonizer.core.daemons.flags import RESTART, START, STATUS, STOP
 from daemonizer.utils.logs import get_logger
@@ -191,3 +192,38 @@ def scan(script: str, strict: bool) -> None:
         click.echo(
             f"{i + 1} \t {daemon_class.__name__} - (module: {daemon_class.__module__})"
         )
+
+
+# Command: $ daemonizer scan
+@cli.command()
+@click.argument("pids", type=click.INT, required=False, nargs=-1)
+@click.option(
+    "--signal",
+    "-g",
+    type=click.INT,
+    is_flag=False,
+    required=False,
+    default=signal.SIGTERM,
+)
+def stop_pid(pids: Tuple[int, ...], signal: int) -> None:
+    """
+    Stop daemons via PID input.
+    This command is recommended if you already have the daemon's PID.
+    On signal reception, daemon will kill stop itself, clean the on-disk PID file and stop the process.
+    :param pids: PIDs
+    :type pids: Tuple[int, ...]
+    :param signal: Signal to be used
+    :type signal: int
+    """
+    click.echo("Stop pids: " + str(pids))
+
+    for pid in pids:
+        if pid <= 0:
+            click.echo("PID must be strictly greater than 0")
+            return None
+
+    # TODO: check on signal input
+
+    for pid in pids:
+        _stop_pid(pid=pid, sig=signal)
+    return None
