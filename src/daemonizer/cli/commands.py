@@ -89,17 +89,13 @@ def start(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
         click.echo("You must add the list of daemon classes and names")
         return None
 
-    daemon_classes: List[str] = [daemons[k] for k in range(len(daemons)) if k % 2 == 0]
-    daemon_names: List[str] = [daemons[k] for k in range(len(daemons)) if k % 2 == 1]
-    d_daemon_classes_names: Dict[str, str] = dict(zip(daemon_classes, daemon_names))
-    # click.echo(d_daemon_classes_names)
-    _cli_parse_daemons(script, d_daemon_classes_names, START, strict)
+    _cli_parse_daemons(script, list(daemons), START, strict)
     return None
 
 
 def _cli_parse_daemons(
     script: str | Path | None = None,
-    exclusive_daemon_classes_names: Dict[str, str] | None = None,
+    exclusive_daemon_classes_names: List[str] | None = None,
     flag_operation: int = DEFAULT_FLAG,
     strict: bool = True,
 ) -> None:
@@ -111,7 +107,7 @@ def _cli_parse_daemons(
     :param script: Input script path
     :type script: str | Path | None
     :param exclusive_daemon_classes_names: Dict of specific daemon classes (and names for daemons to be named) to be run (against the logic scanned from the module). If nothing is specified, all daemons from the module must be considered.
-    :type exclusive_daemon_classes_names: Dict[str, str] | None
+    :type exclusive_daemon_classes_names: List[str] | None
     :param flag_operation: Flag of the operation to perform on considered daemons
     :type flag_operation: int
     :param strict: True if only daemons from current modules should be considered, False otherwise (all daemons including from dependencies)
@@ -126,21 +122,35 @@ def _cli_parse_daemons(
     if isinstance(script, str):
         script = Path(script)
 
-    # if isinstance(exclusive_daemon_classes_names, tuple):
-    #    exclusive_daemon_classes = list(exclusive_daemon_classes_names)
+    if isinstance(exclusive_daemon_classes_names, tuple):
+        exclusive_daemon_classes_names = list(exclusive_daemon_classes_names)
 
     assert isinstance(exclusive_daemon_classes_names, dict), "Daemons must be a list"
+
+    exclusive_daemon_classes: List[str] = [
+        exclusive_daemon_classes_names[k]
+        for k in range(len(exclusive_daemon_classes_names))
+        if k % 2 == 0
+    ]
+    exclusive_daemon_names: List[str] = [
+        exclusive_daemon_classes_names[k]
+        for k in range(len(exclusive_daemon_classes_names))
+        if k % 2 == 1
+    ]
+    d_exclusive_daemon_classes_names: Dict[str, str] = dict(
+        zip(exclusive_daemon_classes, exclusive_daemon_names)
+    )
 
     # Loading module
     module = load_module_from_script(script_path=script)
 
     # Finding daemon classes in module
-    daemon_classes = find_daemon_classes(module=module, strict=strict)
-    click.echo(f"Classes: {daemon_classes}")
+    found_daemon_classes = find_daemon_classes(module=module, strict=strict)
+    click.echo(f"Classes: {found_daemon_classes}")
 
     # Getting daemon instances
     daemon_instances = get_daemon_instances(
-        daemons=daemon_classes, only_includes=exclusive_daemon_classes_names
+        daemons=found_daemon_classes, only_includes=d_exclusive_daemon_classes_names
     )
     click.echo(f"Instances: {daemon_instances}")
 
