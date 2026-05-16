@@ -1,6 +1,7 @@
 """CLI commands"""
 
 import signal
+from pathlib import Path
 from typing import Tuple
 
 import click
@@ -9,6 +10,7 @@ from daemonizer.cli.daemon_loader import find_daemon_classes, load_module_from_s
 from daemonizer.cli.processor import _cli_parse_daemons, _stop_pid
 from daemonizer.constants import APP_NAME, APP_VERSION
 from daemonizer.core.daemons.flags import RESTART, START, STATUS, STOP
+from daemonizer.files import PID_FILES_DIR
 from daemonizer.utils.logs import get_logger
 
 logger = get_logger(__name__)
@@ -194,7 +196,7 @@ def scan(script: str, strict: bool) -> None:
         )
 
 
-# Command: $ daemonizer scan
+# Command: $ daemonizer stop-pid
 @cli.command()
 @click.argument("pids", type=click.INT, required=False, nargs=-1)
 @click.option(
@@ -227,3 +229,39 @@ def stop_pid(pids: Tuple[int, ...], signal: int) -> None:
     for pid in pids:
         _stop_pid(pid=pid, sig=signal)
     return None
+
+
+# Command: $ daemonizer stop-name
+@cli.command()
+@click.argument("names", type=click.STRING, required=False, nargs=-1)
+@click.option(
+    "--signal",
+    "-g",
+    type=click.INT,
+    is_flag=False,
+    required=False,
+    default=signal.SIGTERM,
+)
+def stop_name(names: Tuple[str, ...], signal: int) -> None:
+    """
+    Stop daemons via daemon's name input.
+    This command is recommended if you already have the daemon names.
+    """
+    click.echo("Stop daemon names: " + str(names))
+
+    for daemon_name in names:
+        pid: int = -1
+
+        # Cleaning daemon name
+        if daemon_name.endswith(".pid"):
+            daemon_name = daemon_name.replace(".pid", "")
+
+        # Getting daemon name
+        p = PID_FILES_DIR / Path(daemon_name + ".pid")
+
+        if p.exists():
+            with open(p.absolute(), "r") as f:
+                pid = int(f.readline().strip())
+                _stop_pid(pid=pid, sig=signal)
+        else:
+            click.echo(f"PID file for this daemon's name: {daemon_name} does not exist")
