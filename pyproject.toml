@@ -5,6 +5,7 @@ description = "Lib to daemonize programs"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "click>=8.3.3",
     "distro>=1.9.0",
     "psutil>=7.2.2",
 ]
@@ -17,3 +18,7 @@ dev = [
 [tool.uv]
 package = true
 exclude-newer = "5 days"  # https://docs.astral.sh/uv/reference/settings/#exclude-newer
+
+# CLI entry-point
+[project.scripts]
+daemonizer = "daemonizer.cli.commands:cli"
