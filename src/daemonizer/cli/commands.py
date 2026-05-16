@@ -1,8 +1,9 @@
 """CLI commands"""
 
+import glob
 import signal
 from pathlib import Path
-from typing import Tuple
+from typing import List, Tuple
 
 import click
 
@@ -12,6 +13,7 @@ from daemonizer.constants import APP_NAME, APP_VERSION
 from daemonizer.core.daemons.flags import RESTART, START, STATUS, STOP
 from daemonizer.files import PID_FILES_DIR
 from daemonizer.utils.logs import get_logger
+from daemonizer.utils.process import is_active_process
 
 logger = get_logger(__name__)
 
@@ -265,3 +267,26 @@ def stop_name(names: Tuple[str, ...], signal: int) -> None:
                 _stop_pid(pid=pid, sig=signal)
         else:
             click.echo(f"PID file for this daemon's name: {daemon_name} does not exist")
+
+
+# Command: $ daemonizer ls
+@cli.command()
+def ls() -> None:
+    """
+    Listing all daemons currently found
+    """
+    pattern = PID_FILES_DIR / "*.pid"
+    found_daemons: List[str] = sorted(glob.glob(pattern.__str__()))
+
+    for i, daemon in enumerate(found_daemons):
+        pidfile: Path = Path(daemon).absolute()
+
+        daemon_name: str = pidfile.stem
+
+        with open(pidfile.absolute(), "r") as f:
+            pid = int(f.readline().strip())
+
+        is_active_daemon: bool = is_active_process(pid_=pid)
+        click.echo(
+            f"({i + 1}) {daemon_name} | PID := {pid} | Active?: {is_active_daemon}"
+        )
