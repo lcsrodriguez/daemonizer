@@ -41,6 +41,8 @@ theme:
     - navigation.top
 
 plugins:
+  - callouts
+
   - search:
       enabled: true
       lang: en
@@ -109,6 +111,13 @@ extra:
       link: https://github.com/lcsrodriguez/daemonizer
       name: GitHub repository
 
+
+markdown_extensions:
+  - nl2br
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
 nav:
   - Home: index.md
   - Getting started: getting-started.md
@@ -116,4 +125,5 @@ nav:
       - Daemon Internals: daemon-internals.md
       - Processes: process.md
       - Signals: signals.md
+  - CLI Reference: cli.md
   - Documentation: reference/
