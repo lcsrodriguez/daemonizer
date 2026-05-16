@@ -10,6 +10,9 @@ from daemonizer.utils.logs import get_logger
 logger = get_logger(__name__)
 
 
+# @daemonizer.new(
+#    name="SampleDaemon1",
+# )
 class SampleDaemon1(UNIXDaemon):
     """
     Sample daemon 1

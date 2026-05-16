@@ -23,8 +23,6 @@ logger = get_logger(__name__)
 def cli() -> None:
     """
     CLI entry point
-    :return: Nothing
-    :rtype: None
     """
     pass
 
@@ -34,8 +32,6 @@ def cli() -> None:
 def version() -> None:
     """
     Version info
-    :return: Nothing
-    :rtype: None
     """
     click.echo(f"{APP_NAME} v{APP_VERSION}")
 
@@ -64,8 +60,6 @@ def version() -> None:
 def start(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     """
     Start daemons (CLI target)
-    :return: Nothing
-    :rtype: None
     """
     _cli_parse_daemons(script, list(daemons), START, strict)
 
@@ -94,8 +88,6 @@ def start(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
 def stop(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     """
     Stop daemons (CLI target)
-    :return: Nothing
-    :rtype: None
     """
     _cli_parse_daemons(script, list(daemons), STOP, strict)
 
@@ -124,8 +116,6 @@ def stop(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
 def restart(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     """
     Restart daemons (CLI target)
-    :return: Nothing
-    :rtype: None
     """
     _cli_parse_daemons(script, list(daemons), RESTART, strict)
 
@@ -154,8 +144,6 @@ def restart(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
 def status(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
     """
     Restart daemons (CLI target)
-    :return: Nothing
-    :rtype: None
     """
     _cli_parse_daemons(script, list(daemons), STATUS, strict)
 
@@ -183,8 +171,6 @@ def status(script: str, daemons: Tuple[str, ...], strict: bool) -> None:
 def scan(script: str, strict: bool) -> None:
     """
     Scan daemons (CLI target)
-    :return: Nothing
-    :rtype: None
     """
     click.echo(f"Scan | Script: {script} - Strict: {strict}")
 
