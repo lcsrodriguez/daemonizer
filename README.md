@@ -1,6 +1,7 @@
 # daemonizer
 
 [![Linting](https://github.com/lcsrodriguez/daemonizer/actions/workflows/linting.yml/badge.svg)](https://github.com/lcsrodriguez/daemonizer/actions/workflows/linting.yml)
+[![Docs](https://github.com/lcsrodriguez/daemonizer/actions/workflows/docs_build_deploy.yml/badge.svg)](https://github.com/lcsrodriguez/daemonizer/actions/workflows/docs_build_deploy.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Dependabot Updates](https://github.com/lcsrodriguez/daemonizer/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/lcsrodriguez/daemonizer/actions/workflows/dependabot/dependabot-updates)
 
