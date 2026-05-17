@@ -1,6 +1,6 @@
 """List of defined constants to be used in the project"""
 
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 from typing import List, Tuple
 
 APP_NAME: str = "daemonizer"
@@ -8,6 +8,11 @@ APP_NAME: str = "daemonizer"
 # Version dynamically updated via Makefile targets
 APP_VERSION: str = version(APP_NAME)
 APP_VERSION_TUPLE: Tuple[int, ...] = tuple(map(int, APP_VERSION.split(".")))
+
+try:
+    __version__: str = version(APP_NAME)
+except PackageNotFoundError:
+    __version__ = "unknown"  # "0.0.0"
 
 
 # UNIX system names
