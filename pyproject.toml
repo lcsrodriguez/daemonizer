@@ -1,6 +1,6 @@
 [project]
 name = "daemonizer-py"
-version = "1.4.2"
+version = "1.5.0"
 description = "Library to define and manage daemonized Python-based programs in programmatic (SDK) or CLI-ready ways"
 readme = "README.md"
 requires-python = ">=3.13"
