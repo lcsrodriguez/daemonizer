@@ -3,6 +3,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/daemonizer-py)
 [![Linting](https://github.com/lcsrodriguez/daemonizer/actions/workflows/linting.yml/badge.svg)](https://github.com/lcsrodriguez/daemonizer/actions/workflows/linting.yml)
 [![Docs](https://github.com/lcsrodriguez/daemonizer/actions/workflows/docs_build_deploy.yml/badge.svg)](https://github.com/lcsrodriguez/daemonizer/actions/workflows/docs_build_deploy.yml)
+[![Publish](https://github.com/lcsrodriguez/daemonizer/actions/workflows/publish.yml/badge.svg)](https://github.com/lcsrodriguez/daemonizer/actions/workflows/publish.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Dependabot Updates](https://github.com/lcsrodriguez/daemonizer/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/lcsrodriguez/daemonizer/actions/workflows/dependabot/dependabot-updates)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daemonizer-py)
