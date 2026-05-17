@@ -4,3 +4,5 @@
 *.pyc
 src/*.egg-info
 .github/REQUIRED_SECRETS.md
+*TOKENS*
+dist/*
