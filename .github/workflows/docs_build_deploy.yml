@@ -1,0 +1,89 @@
+name: Docs
+
+permissions:
+  contents: read
+  packages: write
+
+
+on:
+  # push:
+  #   branches: ["main"]
+  release:  # Published releases
+    types: [published]
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      version:
+        description: 'Version of manual release'
+        required: true
+        default: 'default_version'
+        type: string
+      deployable:
+        description: 'Version to be deployed'
+        required: true
+        default: true
+        type: boolean
+
+# Env variables
+env:
+  #IMAGE_NAME: ghcr.io/${{ github.repository }} # ghcr.io/lcsrodriguez/daemonizer
+  IMAGE_TAG: ${{ github.event.release.tag_name || inputs.version }} # latest
+  COMPOSE_CONFIG_FILE: /opt/svc-prod-management/config
+  #SVC_NAME: "daemonizer-docs" # container name := specified in  /opt/svc-prod-management/config in svc-prod-management repo
+
+  #REPO_OWNER: ${{ github.repository_owner }}
+  IMAGE_BASE: daemonizer-docs
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/daemonizer-docs #${{ env.IMAGE_BASE }}
+
+  # Image name := ghcr.io/<username>/<image name>
+  # Image base <=> SVC_NAME := Container name defined in **svc-prod-management**
+
+jobs:
+  build_and_push_image:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Login to GHCR
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        run: |
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Tag image (with latest)
+        run: |
+          docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+
+      - name: Push image to repository
+        run: |
+          docker push $IMAGE_NAME:$IMAGE_TAG
+          docker push $IMAGE_NAME:latest
+
+  deploy_image:
+    needs:
+      - build_and_push_image
+    #if: ${{ inputs.deployable || github.event_name == 'release'}}
+    runs-on: ubuntu-22.04
+    permissions: {}
+    steps:
+      - name: Deploy to prod server
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.PROD_MACHINE_HOST }}
+          username: ${{ secrets.PROD_MACHINE_USER_SVC }}
+          key: ${{ secrets.PROD_MACHINE_SSH_KEY_SVC }}
+          script: |
+            cd ${{ env.COMPOSE_CONFIG_FILE }}
+            docker compose pull ${{ env.IMAGE_BASE }}
+            docker compose up -d ${{ env.IMAGE_BASE }}
