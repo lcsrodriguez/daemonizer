@@ -1,7 +1,7 @@
 [project]
 name = "daemonizer"
 version = "1.4.2"
-description = "Lib to daemonize programs"
+description = "Library to define and manage daemonized Python-based programs in programmatic (SDK) or CLI-ready ways"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -9,6 +9,18 @@ dependencies = [
     "distro>=1.9.0",
     "psutil>=7.2.2",
 ]
+
+authors = [
+    {name = "Lucas RODRIGUEZ"}
+]
+
+keywords = ["daemons", "daemon", "daemonizer", "unix daemons", "processes"]
+
+[project.urls]
+Homepage = "https://github.com/lcsrodriguez/daemonizer"
+Repository = "https://github.com/lcsrodriguez/daemonizer"
+Documentation = "https://daemonizer.lucasrodriguez.net"
+"Bug Tracker" = "https://github.com/lcsrodriguez/daemonizer/issues"
 
 [dependency-groups]
 dev = [
@@ -29,3 +41,10 @@ exclude-newer = "5 days"  # https://docs.astral.sh/uv/reference/settings/#exclud
 # CLI entry-point
 [project.scripts]
 daemonizer = "daemonizer.cli.commands:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/daemonizer"]
