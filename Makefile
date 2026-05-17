@@ -36,3 +36,8 @@ clean-docs:
 
 build-docs:
 	@mkdocs build
+
+# ---------------------
+
+clean-dist:
+	@rm -rf dist/
