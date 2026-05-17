@@ -3,3 +3,4 @@
 .venv
 *.pyc
 src/*.egg-info
+.github/REQUIRED_SECRETS.md
