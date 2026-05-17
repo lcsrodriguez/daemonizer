@@ -131,6 +131,7 @@ source = { editable = "." }
 dependencies = [
     { name = "click" },
     { name = "distro" },
+    { name = "platformdirs" },
     { name = "psutil" },
 ]
 
@@ -150,6 +151,7 @@ docs = [
 requires-dist = [
     { name = "click", specifier = ">=8.3.3" },
     { name = "distro", specifier = ">=1.9.0" },
+    { name = "platformdirs", specifier = ">=4.9.6" },
     { name = "psutil", specifier = ">=7.2.2" },
 ]
 
