@@ -120,7 +120,6 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting started: getting-started.md
   - Guide:
       - Daemon Internals: daemon-internals.md
       - Processes: process.md
