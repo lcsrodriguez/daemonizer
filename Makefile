@@ -1,6 +1,6 @@
 
 
-.PHONY: version up-major up-minor up-patch print-version
+.PHONY: version up-major up-minor up-patch print-version serve-docs clean-docs
 
 version:
 	@uv version #| awk '{print $2}'
@@ -23,3 +23,16 @@ up-patch:  # Upgrading Z in X.Y.Z
 print-version:
 	@echo "Printing version to .project-version"
 	@uv version | awk '{print $$2}' > .project-version
+
+
+# ---------------------
+
+serve-docs:
+	@mkdocs serve --livereload
+
+clean-docs:
+	@echo "Cleaning built docs..."
+	@rm -rf site/
+
+build-docs:
+	@mkdocs build

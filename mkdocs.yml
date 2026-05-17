@@ -1,0 +1,128 @@
+site_name: daemonizer
+site_url: https://daemonizer.lucasrodriguez.net
+
+# Header GitHub repository
+repo_url: https://github.com/lcsrodriguez/daemonizer
+repo_name: lcsrodriguez/daemonizer
+
+theme:
+  name: material
+  language: en
+
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: black
+      accent: yellow
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: black
+      accent: yellow
+
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    #- navigation.path # Breadcrumbs
+    - toc.follow
+    - navigation.top
+
+plugins:
+  - callouts
+
+  - search:
+      enabled: true
+      lang: en
+
+  - gen-files: # Plugin to generate markdown files
+      scripts:
+        - docs/gen_ref_pages.py
+
+  - literate-nav:
+      nav_file: SUMMARY.md
+      implicit_index: true
+  - mkdocstrings:
+      handlers:
+        python:
+          inventories:
+            - https://docs.python.org/3/objects.inv
+            - https://installer.readthedocs.io/en/stable/objects.inv  # demonstration purpose in the docs
+            - https://mkdocstrings.github.io/autorefs/objects.inv
+            - https://www.mkdocs.org/objects.inv
+            - https://python-markdown.github.io/objects.inv
+            - https://jinja.palletsprojects.com/en/stable/objects.inv
+            - https://markupsafe.palletsprojects.com/en/stable/objects.inv
+          options:
+            #allow_inspection: true
+            docstring_style: sphinx
+            show_source: false
+
+            backlinks: tree
+            #docstring_options:
+            #  ignore_init_summary: true
+            docstring_section_style: list
+            filters: public
+            heading_level: 1
+            inherited_members: true
+            merge_init_into_class: true
+            parameter_headings: true
+            separate_signature: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_signature_type_parameters: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            type_parameter_headings: true
+            signature_crossrefs: true
+            summary: true
+            unwrap_annotated: true
+            show_docstring_raises: true
+
+          paths: [ src/daemonizer ]  # search packages in the src folder
+
+extra:
+  generator: false # Made with MkDocs for Material
+
+  # Google Analytics integration
+  #analytics:
+  #  provider: google
+  #  property: G-XXXXXXXXXX
+
+  #homepage: https://daemonizer.lucasrodriguez.net
+
+
+  # Socials on footer
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/lcsrodriguez/daemonizer
+      name: GitHub repository
+
+
+markdown_extensions:
+  - nl2br
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Guide:
+      - Daemon Internals: daemon-internals.md
+      - Processes: process.md
+      - Signals: signals.md
+  - CLI Reference: cli.md
+  - Documentation: reference/
