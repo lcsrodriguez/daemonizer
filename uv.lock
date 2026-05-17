@@ -125,7 +125,7 @@ wheels = [
 ]
 
 [[package]]
-name = "daemonizer"
+name = "daemonizer-py"
 version = "1.4.2"
 source = { editable = "." }
 dependencies = [
