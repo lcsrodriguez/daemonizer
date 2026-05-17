@@ -22,7 +22,7 @@ allowing them to run in the background as standalone logics.
 Install package using `uv` or `pip`:
 
 ```shell
-uv add daemonizer # pip install daemonizer
+uv add daemonizer-py # pip install daemonizer-py
 ```
 
 Create a Python script `daemon.py` where you can define your daemon logic following below framework:
