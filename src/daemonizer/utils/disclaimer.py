@@ -33,14 +33,15 @@ def handle_disclaimer(user_input: bool = True) -> bool:
 
     # Handling environment variable input
     try:
-        env_input: bool = bool(int(get_env_var(DAEMONIZER_DISCLAIMER_ENV_VAR)))
-    except (KeyError, Exception) as exc_:
-        logger.error(exc_)
-        env_input = True  # default value set to True
+        env_input: bool | None = bool(int(get_env_var(DAEMONIZER_DISCLAIMER_ENV_VAR)))
+    except (KeyError, Exception):
+        # logger.error(exc_)
+        env_input = None  # default value set to True
 
-    if user_input:  # The user input is the strongest choice here. It overrides the environment variable
-        return True
+    if (
+        env_input is None
+    ):  # The env input is the strongest choice here. It overrides everything
+        return user_input
     else:
-        if env_input:
-            return True
-    return False
+        return env_input
+    # return False
