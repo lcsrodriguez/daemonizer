@@ -32,3 +32,5 @@ DEFAULT_PID_FILENAME_LENGTH: int = 5
 
 # Start method to be used when creating child processes from `multiprocessing` module
 MULTIPROC_START_METHOD: str = "fork"
+
+DAEMONIZER_DISCLAIMER_ENV_VAR: str = "DAEMONIZER_DISCLAIMER"
