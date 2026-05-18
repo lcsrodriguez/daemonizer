@@ -72,3 +72,6 @@ export DAEMONIZER_DISCLAIMER=0
 
 > [!TIP]
 > You can persist your choice by adding `export DAEMONIZER_DISCLAIMER=0` to your `~/.bashrc` file.
+
+> [!TIP]
+> You can erase your choice by: `unset DAEMONIZER_DISCLAIMER`
