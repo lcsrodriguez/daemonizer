@@ -28,5 +28,47 @@ uv add daemonizer-py
 
 or via `pip`: `pip install daemonizer-py`.
 
-2. Define your daemon logic in a simple Python script
-3. Interact with it either via **SDK handler** (directly from Python scripts) or via the `daemonizer` **CLI**
+2. Define your daemon logic in a simple Python script `sample.py`:
+
+```python linenums="1" hl_lines="10-15" title="Defining daemon logic"
+from datetime import datetime
+from time import sleep
+
+from daemonizer.core.daemons.logic import forever_loop
+from daemonizer.core.daemons.unix import UNIXDaemon
+from daemonizer.utils.logs import get_logger
+
+logger = get_logger(__name__)
+
+class SampleDaemon(UNIXDaemon):
+    @forever_loop(catch_exceptions=False, after_delay=0.01)
+    def run(self) -> None:
+        with open("/tmp/sample_daemon.log", "a") as f:
+            f.write(f"Hello world, this is {datetime.now()}")
+        sleep(1)
+```
+
+3. Interact with it either via the `daemonizer` **CLI**
+
+```shell
+$ daemonizer --no-disclaimer start sample.py SampleDaemon daemon_1
+```
+
+or directly via **SDK handler** (directly from Python scripts)
+
+```python linenums="1" hl_lines="8-10" title="Daemon handler"
+
+from daemonizer.core.handlers.ctx_manager import DaemonHandler
+from .sample import SampleDaemon
+from daemonizer.utils.logs import get_logger, setup_logger
+
+setup_logger()
+logger = get_logger(__name__)
+
+with DaemonHandler() as h:
+    d = SampleDaemon(name="daemon_1")
+    h.start(d) # start daemon
+```
+
+> [!NOTE]
+> Multiple daemons can be defined in a single file and multiple daemons can be managed under a single daemon handler (`DaemonHandler` instance).
