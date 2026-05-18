@@ -12,6 +12,7 @@ from daemonizer.cli.processor import _cli_parse_daemons, _stop_pid
 from daemonizer.constants import APP_NAME, APP_VERSION
 from daemonizer.core.daemons.flags import RESTART, START, STATUS, STOP
 from daemonizer.files import PID_FILES_DIR
+from daemonizer.utils.disclaimer import get_disclaimer, handle_disclaimer
 from daemonizer.utils.logs import get_logger
 from daemonizer.utils.process import is_active_process
 
@@ -20,11 +21,20 @@ logger = get_logger(__name__)
 
 # Entry point
 @click.group()
-def cli() -> None:
+@click.option(
+    "--disclaimer/--no-disclaimer",
+    "-q",
+    type=click.BOOL,
+    is_flag=True,
+    required=False,
+    default=True,
+)
+def cli(disclaimer: bool) -> None:
     """
     CLI entry point
     """
-    pass
+    if handle_disclaimer(user_input=bool(disclaimer)):
+        click.echo(get_disclaimer())
 
 
 # Command: $ daemonizer version

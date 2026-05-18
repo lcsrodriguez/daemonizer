@@ -49,3 +49,29 @@ Commands:
   stop-pid   Stop daemons via PID input.
   version    Version info
 ```
+
+
+## Silence the disclaimer
+
+By default, every CLI target has a disclaimer displayed on standard output (*stdout*) to make sure the user is aware of the risks while interacting with external daemons.
+
+It is possible to turn it off manually:
+
+```shell
+$ daemonizer --no-disclaimer <command>
+```
+
+or via an environment variable:
+
+```shell
+export DAEMONIZER_DISCLAIMER=0
+```
+
+- set to 0 means no disclaimer displayed in this terminal session
+- set to 1 means disclaimers will be displayed in this terminal session
+
+> [!TIP]
+> You can persist your choice by adding `export DAEMONIZER_DISCLAIMER=0` to your `~/.bashrc` file.
+
+> [!TIP]
+> You can erase your choice by: `unset DAEMONIZER_DISCLAIMER`
