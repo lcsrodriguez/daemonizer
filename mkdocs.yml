@@ -94,6 +94,16 @@ plugins:
 
           paths: [ src/daemonizer ]  # search packages in the src folder
 
+  - git-authors:
+      show_email_address: false
+
+  - git-committers:
+      repository: lcsrodriguez/daemonizer
+      branch: main
+
+  - git-revision-date-localized:
+      enable_creation_date: true
+
 extra:
   generator: false # Made with MkDocs for Material
 
