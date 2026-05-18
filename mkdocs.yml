@@ -40,6 +40,11 @@ theme:
     - toc.follow
     - navigation.top
 
+
+    - content.code.copy
+    - content.code.select
+
+
 plugins:
   - callouts
 
@@ -126,6 +131,14 @@ markdown_extensions:
   - nl2br
   - admonition
   - pymdownx.details
+
+
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.superfences
 
 nav:
