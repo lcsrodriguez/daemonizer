@@ -45,6 +45,7 @@ docs = [
     "mkdocs-literate-nav>=0.6.3",
     "mkdocs-material>=9.7.6",
     "mkdocstrings-python>=2.0.3",
+    "tzdata>=2026.2",
 ]
 
 [tool.uv]
