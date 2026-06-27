@@ -28,6 +28,7 @@ print-version:
 # ---------------------
 
 serve-docs:
+	@export DISABLE_MKDOCS_2_WARNING=true
 	@mkdocs serve --livereload
 
 clean-docs:

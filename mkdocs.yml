@@ -40,6 +40,11 @@ theme:
     - toc.follow
     - navigation.top
 
+
+    - content.code.copy
+    - content.code.select
+
+
 plugins:
   - callouts
 
@@ -94,6 +99,16 @@ plugins:
 
           paths: [ src/daemonizer ]  # search packages in the src folder
 
+  - git-authors:
+      show_email_address: false
+
+  - git-committers:
+      repository: lcsrodriguez/daemonizer
+      branch: main
+
+  - git-revision-date-localized:
+      enable_creation_date: true
+
 extra:
   generator: false # Made with MkDocs for Material
 
@@ -116,6 +131,14 @@ markdown_extensions:
   - nl2br
   - admonition
   - pymdownx.details
+
+
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.superfences
 
 nav:
