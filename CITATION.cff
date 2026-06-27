@@ -1,0 +1,35 @@
+# docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files
+
+cff-version: 1.2.0
+title: daemonizer
+message: >-
+  Light-weight and easy-to-use Python package that
+  simplifies the process of daemonizing Python applications,
+  allowing them to run in the background as standalone
+  logics.
+type: software
+authors:
+  - given-names: Lucas
+    family-names: RODRIGUEZ
+    affiliation: lcsrodriguez
+identifiers:
+  - type: url
+    value: 'https://daemonizer.lucasrodriguez.net'
+    description: Documentation
+  - type: url
+    value: 'https://github.com/lcsrodriguez/daemonizer'
+    description: GitHub repo
+repository-code: 'https://github.com/lcsrodriguez/daemonizer'
+url: 'https://daemonizer.lucasrodriguez.net'
+abstract: >-
+  Light-weight and easy-to-use Python package that
+  simplifies the process of daemonizing Python applications,
+  allowing them to run in the background as standalone
+  logics.
+keywords:
+  - daemon
+  - unix-daemon
+  - daemonize-process
+  - daemonizer
+license: MIT
+version: TODO
