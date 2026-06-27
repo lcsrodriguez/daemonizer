@@ -29,7 +29,7 @@ print-version:
 
 serve-docs:
 	@export DISABLE_MKDOCS_2_WARNING=true
-	@mkdocs serve --livereload
+	@mkdocs serve -o --livereload
 
 clean-docs:
 	@echo "Cleaning built docs..."
